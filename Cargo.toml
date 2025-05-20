@@ -1,0 +1,16 @@
+[package]
+name = "sprout"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+clap = { version = "4.5.38", features = ["derive"] }
+
+
+[profile.release]
+opt-level = "z"  # Optimize for size.
+lto = true           # Enable Link Time Optimization.
+codegen-units = 1    # Maximize optimizations for build time.
+panic = "abort"      # Abort on panic.
+strip = true         # Strip symbols from binary.

@@ -1,0 +1,41 @@
+[tools]
+rust = "1.87"
+"pipx:gitingest" = { version = "latest" }
+"pipx:pre-commit" = { version = "latest" }
+
+[tasks.build]
+description = "Run build."
+run = ["cargo build"]
+
+[tasks.lint]
+description = "Run lint."
+run = ["cargo clippy --all-targets -- -D warnings"]
+
+[tasks.test]
+description = "Run tests."
+run = ["cargo test"]
+
+[tasks.test-debug]
+description = "Run tests in debug mode."
+run = ["cargo test --features debug"]
+
+[tasks.ready]
+description = "Prepare for commit."
+run = [
+  "cargo fmt --all",
+  "cargo clippy --all-targets -- -D warnings",
+  "cargo build",
+  "gitingest -o docs/digest.txt -e *.toml,*.txt,.roo/*,.cursor/*,build/*,.devenv/*,.direnv/*,docs/digest.txt,docs/archive/* .",
+]
+
+[tasks.digest]
+description = "Run gitingest on current directory."
+run = [
+  "gitingest -o docs/digest.txt -e *.toml,*.txt,.roo/*,.cursor/*,build/*,.devenv/*,.direnv/*,docs/digest.txt,docs/archive/*,*.lock ."
+]
+
+[tasks.doctor]
+description = "Prepares the project for development."
+run = [
+  "pre-commit install --install-hooks --overwrite"
+]

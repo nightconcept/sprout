@@ -1,0 +1,98 @@
+name: Rust CI
+
+permissions:
+  contents: read # For actions/checkout
+  security-events: write # For github/codeql-action/upload-sarif (if used, not in this version but good to have)
+  actions: read # For actions/cache
+  # Coveralls might need issues:write or similar if it posts comments, but usually just needs a token.
+  # For coverallsapp/github-action, it primarily needs to read code and push data to Coveralls.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build_and_test:
+    name: Test on Rust ${{ matrix.rust-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust-version: [stable] # You can add more versions like 'beta', 'nightly', or specific versions '1.70.0'
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          egress-policy: audit # Configure as needed, 'audit' is a good start
+
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 2 # Or 0 for full history if needed by any tools
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable # Using dtolnay's action, very common
+        with:
+          toolchain: ${{ matrix.rust-version }}
+          components: clippy, rustfmt # Install clippy and rustfmt along with the toolchain
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@13aacd865c20de90d75decf172eb50a30f6a4f89 # v4.0.0
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/            # Cache the target directory to speed up subsequent builds
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install additional Rust tools
+        run: |
+          cargo install cargo-audit
+          cargo install cargo-tarpaulin --version 0.32.7
+
+      - name: Run security audit
+        run: cargo audit
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Lint code
+        # --all-targets: Check library, binaries, tests, examples, etc.
+        # -D warnings: Treat all warnings as errors, failing the build
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        run: cargo test --all-features --verbose
+
+      - name: Generate code coverage (Tarpaulin)
+        # Llvm engine is generally recommended.
+        # Outputting Cobertura XML as it's a common format for Coveralls.
+        # --all-features: Ensure all conditional code is included if tested.
+        # --workspace: If you have a workspace, to cover all crates.
+        # --timeout: Increase if tests are long-running.
+        # --skip-clean: Avoids cleaning the target dir if not needed, might speed up a bit with caching.
+        run: |
+          cargo tarpaulin --verbose --all-features --workspace --engine Llvm --out Xml --output-dir target/tarpaulin
+          # Tarpaulin by default creates cobertura.xml in the output directory
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2.5.0 # v2.5.0 as of May 2024
+        if: matrix.rust-version == 'stable' # Only upload from one Rust version
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }} # Provided by GitHub Actions
+          file: target/tarpaulin/cobertura.xml # Path to the Cobertura report
+          # service_name: github # Usually auto-detected
+          # coveralls_endpoint: https://coveralls.io # Default, change if using Coveralls Enterprise
+          # You might need to set COVERALLS_REPO_TOKEN as an environment variable if the action requires it
+          # and github-token is not sufficient for private repos or specific setups.
+          # env:
+          #   COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          # However, coverallsapp/github-action v2 usually prefers GITHUB_TOKEN for public repos.
+          # For private repos, COVERALLS_REPO_TOKEN is typically required by Coveralls.
+          # The action's documentation is the best source for token requirements.
