@@ -54,7 +54,7 @@ jobs:
       - name: Install additional Rust tools
         run: |
           cargo install cargo-audit --force
-          cargo install cargo-tarpaulin --version 0.32.7
+          cargo install cargo-tarpaulin --version 0.32.7 --force
 
       - name: Run security audit
         run: cargo audit
