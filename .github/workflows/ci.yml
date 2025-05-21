@@ -39,7 +39,7 @@ jobs:
           components: clippy, rustfmt # Install clippy and rustfmt along with the toolchain
 
       - name: Cache Cargo dependencies
-        uses: actions/cache@13aacd865c20de90d75decf172eb50a30f6a4f89 # v4.0.0
+        uses: actions/cache@v4 # v4.0.0
         with:
           path: |
             ~/.cargo/bin/
