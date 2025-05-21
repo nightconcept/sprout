@@ -1,4 +1,4 @@
-# codesprout 🌱
+# sprout 🌱
 
 ![License](https://img.shields.io/github/license/nightconcept/codesprout)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/nightconcept/codesprout/ci.yml)

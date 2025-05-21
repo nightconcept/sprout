@@ -177,6 +177,7 @@
 - [x] **Task 4.3: Fix GitHub Actions Workflow Permission Warnings** (2025-05-21)
   - [x] Review and address permission warnings reported for GitHub Actions workflows.
   - [x] Ensure workflows use the principle of least privilege.
+  - [x] Explicitly pass `GITHUB_TOKEN` to `release-please-action` in `.github/workflows/release.yml` to address PR creation permission error. (2025-05-21)
   - [ ] Target warnings:
     - `Warn: topLevel 'security-events' permission set to 'write': .github/workflows/ci.yml:5`
     - `Warn: topLevel 'contents' permission set to 'write': .github/workflows/release.yml:9`

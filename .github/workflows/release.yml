@@ -23,12 +23,12 @@ jobs:
 
       - name: Release Please
         id: release
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445
         with:
           release-type: rust
           # package-name: sprout # This input is deprecated for release-type: rust
           # Optional: Define a custom token if needed, though default GITHUB_TOKEN often works.
-          # token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           # Optional: If you want release-please to create a PR instead of releasing directly
           # command: release-pr
           # Optional: If you want to include a manifest file (e.g. for cargo-dist)
@@ -53,7 +53,7 @@ jobs:
             target: x86_64-apple-darwin
             asset_name_suffix: macos-x86_64
             binary_name: sprout
-          - os: macos-latest # For Apple Silicon
+          - os: macos-latest
             target: aarch64-apple-darwin
             asset_name_suffix: macos-aarch64
             binary_name: sprout
