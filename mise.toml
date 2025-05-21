@@ -44,3 +44,6 @@ description = "Prepares the project for development."
 run = [
   "pre-commit install --install-hooks --overwrite"
 ]
+
+[env]
+LIBRARY_PATH = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib"
