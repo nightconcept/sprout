@@ -7,6 +7,10 @@ rust = "1.87"
 description = "Run build."
 run = ["cargo build"]
 
+[tasks.format]
+description = "Run format."
+run = ["cargo fmt --all"]
+
 [tasks.lint]
 description = "Run lint."
 run = ["cargo clippy --all-targets -- -D warnings"]

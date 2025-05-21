@@ -158,3 +158,4 @@
 - [ ] Refine and add more detailed verbose logging options (e.g., using `log` and `env_logger` crates).
 - [ ] Research and implement packaging/distribution methods for the Rust binary (e.g., `cargo-dist`, GitHub Releases assets, AUR, Homebrew).
 - [ ] Performance benchmarking and optimization for very large bundle files or a high number of files.
+- [x] **Task 4.1: Create Project README** (2025-05-20) - Create a cool README.md with emojis, project description, usage, build, and test instructions.
