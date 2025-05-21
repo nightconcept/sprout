@@ -214,10 +214,10 @@ mod tests {
         // Different OS path separators might cause issues, so we compare with both forms
         let expected_path = output_dir.join("level1").join("item");
         assert!(
-            error_message.contains(&expected_path.display().to_string()) || 
-            error_message.contains(&expected_path.display().to_string().replace("\\", "/")),
-            "Error message '{}' doesn't contain path '{}'", 
-            error_message, 
+            error_message.contains(&expected_path.display().to_string())
+                || error_message.contains(&expected_path.display().to_string().replace("\\", "/")),
+            "Error message '{}' doesn't contain path '{}'",
+            error_message,
             expected_path.display()
         );
     }
@@ -388,5 +388,83 @@ mod tests {
         assert!(!output_dir.join("parent_file/child.txt").exists());
 
         Ok(())
+    }
+
+    #[test]
+    fn test_create_files_parent_creation_failure_due_to_file_ancestor() -> Result<()> {
+        let dir = tempdir()?;
+        let output_dir = dir.path();
+
+        // Create a file that will act as an invalid ancestor for a directory to be created
+        let ancestor_file_path = output_dir.join("ancestor_is_a_file");
+        fs::write(
+            &ancestor_file_path,
+            "I am a file, blocking directory creation.",
+        )?;
+
+        let entries = vec![create_parsed_entry(
+            "ancestor_is_a_file/new_subdir/target_file.txt",
+            "This content should not be written.",
+        )];
+
+        let result = create_files_from_bundle(&entries, output_dir, false);
+
+        assert!(
+            result.is_err(),
+            "Expected an error due to parent creation failure"
+        );
+        let error_message = result.err().unwrap().to_string();
+
+        // Check for the specific context message from line 34
+        let expected_parent_path_to_fail = output_dir.join("ancestor_is_a_file/new_subdir");
+        assert!(
+            error_message.contains(&format!(
+                "Failed to create parent directory: {:?}",
+                expected_parent_path_to_fail
+            )),
+            "Error message did not contain the expected context. Got: {}",
+            error_message
+        );
+
+        // Ensure no part of the new path was created
+        assert!(!output_dir.join("ancestor_is_a_file/new_subdir").exists());
+        assert!(
+            !output_dir
+                .join("ancestor_is_a_file/new_subdir/target_file.txt")
+                .exists()
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_check_for_collisions_path_parent_is_none() {
+        // Use an empty path for output_dir. An empty path does not "exist" as a filesystem object,
+        // so output_dir.join("") (which is also an empty path) will have .exists() == false.
+        let output_dir = Path::new("");
+
+        // Entry path "" (empty string) makes entry.path.parent() return None.
+        // This is the condition to trigger the .unwrap_or_else(|| Path::new("")) on line 74.
+        let entries = vec![create_parsed_entry("", "content")]; // entry.path is PathBuf::from("")
+
+        // Walkthrough for this setup:
+        // 1. entry.path = PathBuf::from("")
+        // 2. output_dir = Path::new("")
+        // 3. target_path = output_dir.join(&entry.path) results in Path::new("")
+        //    (since Path::new("").join(Path::new("")) is Path::new(""))
+        // 4. target_path.exists() (for Path::new("")) is false.
+        // 5. The 'else' block (line 69 in check_for_collisions) is entered.
+        // 6. entry.path.parent() (for PathBuf::from("")) is None.
+        // 7. The .unwrap_or_else(|| Path::new("")) on line 74 is hit, and its closure returns Path::new("").
+        // 8. Path::new("").components() yields an empty iterator.
+        // 9. The loop `for component in ...components()` (line 71) does not iterate.
+        // 10. No collisions are added to the `collisions` vector.
+        // 11. The function should return Ok(()).
+        let result = check_for_collisions(&entries, output_dir);
+        assert!(
+            result.is_ok(),
+            "Expected Ok for empty output_dir and empty entry.path, but got Err: {:?}",
+            result.err()
+        );
     }
 }

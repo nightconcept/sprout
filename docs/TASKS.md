@@ -195,3 +195,22 @@
     - `Warn: topLevel 'contents' permission set to 'write': .github/workflows/release.yml:9`
     - `Info: topLevel permissions set to 'read-all': .github/workflows/scorecards.yml:18`
   - [ ] Verify other 'Info' level read permissions are appropriate.
+## Milestone 5: Code Coverage Improvement
+
+**Goal:** Increase test coverage for core modules based on the `tarpaulin-report.html`.
+
+- [x] **Task 5.1: Improve test coverage for `src/bundler.rs`** (2025-05-21)
+  - [x] Analyze `tarpaulin-report.html` for uncovered lines in `src/bundler.rs`.
+  - [x] Write new unit tests or modify existing ones in `src/bundler.rs` (tests module) to cover these lines.
+  - [x] Target lines: 34, 74.
+  - [x] Aim for 100% coverage for `src/bundler.rs`.
+- [ ] **Task 5.2: Improve test coverage for `src/main.rs`** (2025-05-21)
+  - [ ] Analyze `tarpaulin-report.html` for uncovered lines in `src/main.rs`.
+  - [ ] Write new tests (likely integration tests in `tests/integration_tests.rs` as `main.rs` handles CLI logic) to cover these lines/scenarios.
+  - [ ] Target lines: 44, 51, 76.
+  - [ ] Aim for 100% coverage for `src/main.rs`.
+- [ ] **Task 5.3: Improve test coverage for `src/parser.rs`** (2025-05-21)
+  - [ ] Analyze `tarpaulin-report.html` for the many uncovered lines in `src/parser.rs`.
+  - [ ] Write new unit tests or modify existing ones in `src/parser.rs` (tests module) to cover these lines.
+  - [ ] Prioritize covering error handling paths and complex logic branches.
+  - [ ] Aim for significantly improved coverage, targeting 100% for `src/parser.rs`.
