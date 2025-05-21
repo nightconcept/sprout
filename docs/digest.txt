@@ -1,15 +1,43 @@
 Directory structure:
 └── codesprout/
+    ├── .pre-commit-config.yaml
     ├── docs/
     │   ├── PRD.md
     │   └── TASKS.md
     ├── src/
-    │   └── main.rs
+    │   ├── bundler.rs
+    │   ├── main.rs
+    │   └── parser.rs
+    ├── tests/
+    │   └── integration_tests.rs
     ├── .cursor/
     ├── .github/
     │   └── workflows/
     │       └── ci.yml
     └── .roo/
+
+================================================
+File: .pre-commit-config.yaml
+================================================
+repos:
+  - repo: local
+    hooks:
+      - id: rustfmt-check
+        name: rustfmt (check)
+        entry: cargo fmt --all -- --check
+        language: system
+        types: [rust]
+        pass_filenames: false
+        verbose: true
+      - id: clippy-check
+        name: clippy (check)
+        entry: cargo clippy --all-targets -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+        verbose: true
+
+
 
 ================================================
 File: docs/PRD.md
@@ -159,11 +187,11 @@ File: docs/TASKS.md
 - [x] **Task 0.2: Define Code Formatting Task & Integration**
   - [x] Document the command for checking formatting: `cargo fmt --all --check`.
   - [x] Document the command for applying formatting: `cargo fmt --all`.
-  - [ ] (Optional) Consider integrating `cargo fmt --all --check` into a pre-commit hook or CI step later.
+  - [x] (Optional) Consider integrating `cargo fmt --all --check` into a pre-commit hook or CI step later.
     - [x] Verification: `cargo fmt --all --check` passes on a cleanly formatted codebase. `cargo fmt --all` correctly formats any misformatted Rust files.
 - [x] **Task 0.3: Define Code Linting Task & Integration**
   - [x] Document the command for linting: `cargo clippy --all-targets -- -D warnings` (treat all warnings as errors).
-  - [ ] (Optional) Consider integrating this lint check into a pre-commit hook or CI step later.
+  - [x] (Optional) Consider integrating this lint check into a pre-commit hook or CI step later.
   - [x] Verification: `cargo clippy --all-targets -- -D warnings` passes on a lint-free codebase.
 - [ ] **Task 0.4: Define Building Tasks**
   - [x] Document command for debug builds: `cargo build`.
@@ -204,46 +232,46 @@ File: docs/TASKS.md
         - `sprout -i valid_bundle.txt -o ./my_output` correctly parses input and output paths.
         - `sprout ./my_output_dir` (assuming `my_output_dir` is not the bundle file) is handled by clap for positional args.
         - `sprout` (with no input arguments) shows an error message from `clap` indicating missing required input.
-- [ ] **Task 1.3: Establish Main Application Logic Flow & Error Handling**
+- [x] **Task 1.3: Establish Main Application Logic Flow & Error Handling**
     
-    - [ ] In `src/main.rs`, ensure `main` function returns `anyhow::Result<()>`.
-    - [ ] Define the high-level steps based on parsed arguments:
+    - [x] In `src/main.rs`, ensure `main` function returns `anyhow::Result<()>`.
+    - [x] Define the high-level steps based on parsed arguments:
         1. Resolve final input and output paths.
         2. (Stub) Call `parser::process_bundle_file(input_path)`.
         3. (Stub) If parsing/validation successful, call `bundler::create_files(parsed_data, output_path)`.
-    - [ ] Implement basic stubs for these functions in their respective (future) modules (`parser.rs`, `bundler.rs`).
-    - [ ] Ensure `main` propagates errors from these calls using `?`.
-    - [ ] Verification: The `sprout` command runs, prints placeholder messages for each stubbed step based on parsed arguments, and exits gracefully (or with a placeholder error from a stub).
+    - [x] Implement basic stubs for these functions in their respective (future) modules (`parser.rs`, `bundler.rs`).
+    - [x] Ensure `main` propagates errors from these calls using `?`.
+    - [x] Verification: The `sprout` command runs, prints placeholder messages for each stubbed step based on parsed arguments, and exits gracefully (or with a placeholder error from a stub).
 
 ## Milestone 2: Bundle File Parsing and Validation
 
 **Goal:** Implement the complete logic for reading, parsing, and validating the `digest.txt`-style bundle file. The tool should be able to identify all format errors in the bundle file before any file system operations are attempted.
 
-- [ ] **Task 2.1: Develop Bundle File Parser (`src/parser.rs`)**
+- [x] **Task 2.1: Develop Bundle File Parser (`src/parser.rs`)**
     
-    - [ ] Create the `src/parser.rs` module.
-    - [ ] Define a public function, e.g., `parse_bundle(bundle_path: &Path) -> anyhow::Result<Vec<ParsedEntry>>`.
-    - [ ] Implement logic to read the content of the bundle file.
-    - [ ] Implement parsing logic to iterate through the file content, recognizing the `================================================\nFile: path/to/file.ext\n================================================\n...content...` structure.
-    - [ ] Extract the relative file path (`String` or `PathBuf`) and the multi-line content (`String`) for each entry.
-    - [ ] Store the parsed data in a struct, e.g., `pub struct ParsedEntry { pub path: PathBuf, pub content: String }`.
-    - [ ] Verification: Unit tests for the `parser::parse_bundle` function covering:
-        - Empty bundle file (should return empty Vec or appropriate error).
-        - Bundle file with one entry.
-        - Bundle file with multiple entries.
-        - Entries with empty content.
-        - Entries with complex multi-line content.
-        - Correct path extraction (including paths with subdirectories).
-- [ ] **Task 2.2: Implement Bundle File Format Validation**
+    - [x] Create the `src/parser.rs` module. (Covered by previous tasks or implicitly by creating the file)
+    - [x] Define a public function, e.g., `parse_bundle(bundle_path: &Path) -> anyhow::Result<Vec<ParsedEntry>>`.
+    - [x] Implement logic to read the content of the bundle file.
+    - [x] Implement parsing logic to iterate through the file content, recognizing the `================================================\nFile: path/to/file.ext\n================================================\n...content...` structure.
+    - [x] Extract the relative file path (`String` or `PathBuf`) and the multi-line content (`String`) for each entry.
+    - [x] Store the parsed data in a struct, e.g., `pub struct ParsedEntry { pub path: PathBuf, pub content: String }`.
+    - [x] Verification: Unit tests for the `parser::parse_bundle` function covering:
+        - [x] Empty bundle file (should return empty Vec or appropriate error).
+        - [x] Bundle file with one entry.
+        - [x] Bundle file with multiple entries.
+        - [x] Entries with empty content.
+        - [x] Entries with complex multi-line content.
+        - [x] Correct path extraction (including paths with subdirectories).
+- [x] **Task 2.2: Implement Bundle File Format Validation**
     
-    - [ ] Within `src/parser.rs`, enhance the parsing or add a distinct validation step for the parsed entries and the overall bundle structure. This validation should occur before returning successfully from `parse_bundle`.
-    - [ ] Validation checks should include:
+    - [x] Within `src/parser.rs`, enhance the parsing or add a distinct validation step for the parsed entries and the overall bundle structure. This validation should occur before returning successfully from `parse_bundle`.
+    - [x] Validation checks should include:
         - Each `File:` header line must be properly formed and contain a non-empty, valid relative path.
         - No duplicate paths within the bundle.
-        - Consider edge cases: premature EOF, missing headers, content before the first header (should it be ignored or an error?).
-    - [ ] The validation should collect _all_ format errors found in the bundle and return them as a single `anyhow::Error` (possibly by formatting a list of specific error details).
-    - [ ] In `src/main.rs`, call `parse_bundle`. If it returns `Err`, print the error (which should now include all validation issues) and exit.
-    - [ ] Verification:
+        - Consider edge cases: premature EOF, missing headers, content before the first header (should it be ignored or an error?). (Implemented: content before first header is an error; other structural errors handled)
+    - [x] The validation should collect _all_ format errors found in the bundle and return them as a single `anyhow::Error` (possibly by formatting a list of specific error details).
+    - [x] In `src/main.rs`, call `parse_bundle`. If it returns `Err`, print the error (which should now include all validation issues) and exit. (Handled by `anyhow` and `?` operator).
+    - [x] Verification:
         - Update unit tests for `parser::parse_bundle` to cover various invalid bundle file scenarios (e.g., malformed `File:` line, duplicate paths, EOF within a file block).
         - Test the `sprout` CLI with sample malformed bundle files; ensure all relevant errors are reported clearly and the program exits without attempting to write files.
 
@@ -251,48 +279,48 @@ File: docs/TASKS.md
 
 **Goal:** Implement the logic to create the directory structure and files as specified in the parsed bundle. This includes robust collision detection in the output directory. This milestone will result in a fully functional `sprout` CLI for its core purpose.
 
-- [ ] **Task 3.1: Implement Output Path Collision Detection (`src/bundler.rs`)**
+- [x] **Task 3.1: Implement Output Path Collision Detection (`src/bundler.rs`)**
     
-    - [ ] Create the `src/bundler.rs` module.
-    - [ ] Implement a function, e.g., `check_for_collisions(entries: &[ParsedEntry], output_dir: &Path) -> anyhow::Result<()>`.
-    - [ ] For each `ParsedEntry` in the list:
+    - [x] Create the `src/bundler.rs` module.
+    - [x] Implement a function, e.g., `check_for_collisions(entries: &[ParsedEntry], output_dir: &Path) -> anyhow::Result<()>`.
+    - [x] For each `ParsedEntry` in the list:
         - Construct the full target path by joining `output_dir` and `entry.path`.
         - Check if this full target path already exists using `std::path::Path::exists()`.
-    - [ ] If any path collision is detected, this function should return an `anyhow::Error` detailing all collisions found.
-    - [ ] In `src/main.rs`, call this collision check function after successful bundle parsing. If it returns `Err`, print the error and exit.
-    - [ ] Verification:
+    - [x] If any path collision is detected, this function should return an `anyhow::Error` detailing all collisions found.
+    - [x] In `src/main.rs`, call this collision check function after successful bundle parsing. If it returns `Err`, print the error and exit.
+    - [x] Verification:
         - Unit tests for `bundler::check_for_collisions` with scenarios: no collisions, one collision, multiple collisions, collision with a file where a directory is needed, collision with a directory where a file is needed.
         - CLI Test: `sprout` aborts with an informative error if a target file path already exists.
         - CLI Test: `sprout` aborts if a parent directory to be created (e.g., `new_dir/`) conflicts with an existing file named `new_dir`.
-- [ ] **Task 3.2: Implement Directory and File Creation (`src/bundler.rs`)**
+- [x] **Task 3.2: Implement Directory and File Creation (`src/bundler.rs`)**
     
-    - [ ] Implement a function, e.g., `create_files_from_bundle(entries: &[ParsedEntry], output_dir: &Path) -> anyhow::Result<()>`.
-    - [ ] This function is called only if bundle parsing and collision checks pass.
-    - [ ] For each `ParsedEntry`:
-        - Resolve the full absolute path for the new file.
-        - Ensure its parent directory exists using `std::fs::create_dir_all(parent_path)`.
-        - Write the `entry.content` to the file path using `std::fs::write`.
-    - [ ] Handle potential I/O errors during directory/file creation gracefully, returning an `anyhow::Error`.
-    - [ ] Verification:
-        - Unit tests for `bundler::create_files_from_bundle` to verify:
-            - Creation of a single file in the output directory.
-            - Creation of multiple files.
-            - Creation of files within newly created nested subdirectories.
-            - Correct writing of file content.
+    - [x] Implement a function, e.g., `create_files_from_bundle(entries: &[ParsedEntry], output_dir: &Path) -> anyhow::Result<()>`.
+    - [x] This function is called only if bundle parsing and collision checks pass.
+    - [x] For each `ParsedEntry`:
+        - [x] Resolve the full absolute path for the new file.
+        - [x] Ensure its parent directory exists using `std::fs::create_dir_all(parent_path)`.
+        - [x] Write the `entry.content` to the file path using `std::fs::write`.
+    - [x] Handle potential I/O errors during directory/file creation gracefully, returning an `anyhow::Error`.
+    - [x] Verification:
+        - [x] Unit tests for `bundler::create_files_from_bundle` to verify:
+            - [x] Creation of a single file in the output directory.
+            - [x] Creation of multiple files.
+            - [x] Creation of files within newly created nested subdirectories.
+            - [x] Correct writing of file content.
         - (Covered by integration tests in next task mostly)
-- [ ] **Task 3.3: Final Integration, User Feedback, and Testing**
+- [x] **Task 3.3: Final Integration, User Feedback, and Testing**
     
-    - [ ] Integrate all components in `src/main.rs`: CLI parsing (`clap`), bundle file reading/validation (`parser.rs`), collision detection, and file/directory creation (`bundler.rs`).
-    - [ ] Implement clear success messages (e.g., "Successfully sprouted N files to <output_directory>.").
-    - [ ] Ensure all error paths (bundle format errors, I/O errors, collision errors) provide user-friendly messages propagated by `anyhow`.
-    - [ ] Write integration tests for the `sprout` CLI (e.g., using a test runner or simple shell scripts that invoke the compiled binary):
-        - Test with a valid bundle file creating a simple structure.
-        - Test with a valid bundle file creating a nested structure.
-        - Test failure with a malformed bundle file (ensure all errors are printed).
-        - Test failure due to output file collision (ensure specific collision is reported).
-        - Test with empty bundle file.
-        - Test output to current directory (default) and to a specified directory.
-    - [ ] Verification: The `sprout` command works end-to-end for valid scenarios and fails gracefully with correct, comprehensive error messages for all defined error conditions. Code coverage for core logic (parsing, bundling) is reasonable.
+    - [x] Integrate all components in `src/main.rs`: CLI parsing (`clap`), bundle file reading/validation (`parser.rs`), collision detection, and file/directory creation (`bundler.rs`).
+    - [x] Implement clear success messages (e.g., "Successfully sprouted N files to <output_directory>.").
+    - [x] Ensure all error paths (bundle format errors, I/O errors, collision errors) provide user-friendly messages propagated by `anyhow`.
+    - [x] Write integration tests for the `sprout` CLI (e.g., using a test runner or simple shell scripts that invoke the compiled binary):
+        - [x] Test with a valid bundle file creating a simple structure.
+        - [x] Test with a valid bundle file creating a nested structure.
+        - [x] Test failure with a malformed bundle file (ensure all errors are printed).
+        - [x] Test failure due to output file collision (ensure specific collision is reported).
+        - [x] Test with empty bundle file.
+        - [x] Test output to current directory (default) and to a specified directory.
+    - [x] Verification: The `sprout` command works end-to-end for valid scenarios and fails gracefully with correct, comprehensive error messages for all defined error conditions. Code coverage for core logic (parsing, bundling) is reasonable.
 
 ## Additional Tasks / Backlog
 
@@ -308,10 +336,333 @@ File: docs/TASKS.md
 
 
 ================================================
+File: src/bundler.rs
+================================================
+// src/bundler.rs
+// Module for file/directory creation and output logic
+
+use crate::parser::ParsedEntry;
+use anyhow::{Context, Result};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
+
+/// Creates directories and files based on the parsed bundle entries.
+///
+/// This function is called only if bundle parsing and collision checks pass.
+/// For each `ParsedEntry`:
+///   - Resolves the full absolute path for the new file.
+///   - Ensures its parent directory exists using `std::fs::create_dir_all(parent_path)`.
+///   - Writes the `entry.content` to the file path using `std::fs::write`.
+///
+/// Handles potential I/O errors during directory/file creation gracefully, returning an `anyhow::Error`.
+pub fn create_files_from_bundle(entries: &[ParsedEntry], output_dir: &Path) -> Result<()> {
+    for entry in entries {
+        let full_target_path = output_dir.join(&entry.path);
+
+        if let Some(parent_path) = full_target_path.parent() {
+            if !parent_path.exists() {
+                fs::create_dir_all(parent_path).with_context(|| {
+                    format!("Failed to create parent directory: {:?}", parent_path)
+                })?;
+            }
+        }
+
+        fs::write(&full_target_path, &entry.content)
+            .with_context(|| format!("Failed to write file: {:?}", full_target_path))?;
+    }
+    Ok(())
+}
+
+/// Checks for path collisions in the output directory.
+///
+/// For each `ParsedEntry`, it constructs the full target path by joining
+/// `output_dir` and `entry.path`. It then checks if this full target path
+/// already exists. If any collisions are detected, it returns an `anyhow::Error`
+/// detailing all collisions.
+pub fn check_for_collisions(entries: &[ParsedEntry], output_dir: &Path) -> Result<()> {
+    let mut collisions = Vec::new();
+
+    for entry in entries {
+        let target_path = output_dir.join(&entry.path);
+        if target_path.exists() {
+            collisions.push(target_path);
+        } else {
+            let mut current_check_path = PathBuf::new();
+            for component in entry
+                .path
+                .parent()
+                .unwrap_or_else(|| Path::new(""))
+                .components()
+            {
+                current_check_path.push(component);
+                let full_component_path = output_dir.join(&current_check_path);
+                if full_component_path.is_file()
+                    && entry
+                        .path
+                        .strip_prefix(&current_check_path)
+                        .is_ok_and(|p| !p.as_os_str().is_empty())
+                {
+                    collisions.push(full_component_path);
+                    break;
+                }
+            }
+        }
+    }
+
+    if !collisions.is_empty() {
+        let collision_details = collisions
+            .iter()
+            .map(|p| format!("  - {}", p.display()))
+            .collect::<Vec<String>>()
+            .join("\n");
+        return Err(anyhow::anyhow!(
+            "Output path collision detected. The following paths already exist or conflict with directory creation:\n{}",
+            collision_details
+        ));
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::ParsedEntry;
+    use std::fs::{self, File};
+    use tempfile::tempdir;
+
+    fn create_parsed_entry(path_str: &str, content_str: &str) -> ParsedEntry {
+        ParsedEntry {
+            path: PathBuf::from(path_str),
+            content: String::from(content_str),
+        }
+    }
+
+    #[test]
+    fn test_check_for_collisions_no_collision() {
+        let dir = tempdir().unwrap();
+        let output_dir = dir.path();
+        let entries = vec![
+            create_parsed_entry("file1.txt", "content1"),
+            create_parsed_entry("dir1/file2.txt", "content2"),
+        ];
+
+        let result = check_for_collisions(&entries, output_dir);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_check_for_collisions_single_file_collision() {
+        let dir = tempdir().unwrap();
+        let output_dir = dir.path();
+        File::create(output_dir.join("file1.txt")).unwrap();
+
+        let entries = vec![
+            create_parsed_entry("file1.txt", "content1"),
+            create_parsed_entry("file2.txt", "content2"),
+        ];
+
+        let result = check_for_collisions(&entries, output_dir);
+        assert!(result.is_err());
+        let error_message = result.err().unwrap().to_string();
+        assert!(error_message.contains("Output path collision detected"));
+        assert!(error_message.contains(&output_dir.join("file1.txt").display().to_string()));
+    }
+
+    #[test]
+    fn test_check_for_collisions_multiple_file_collisions() {
+        let dir = tempdir().unwrap();
+        let output_dir = dir.path();
+        File::create(output_dir.join("file1.txt")).unwrap();
+        fs::create_dir_all(output_dir.join("dir1")).unwrap();
+        File::create(output_dir.join("dir1/file2.txt")).unwrap();
+
+        let entries = vec![
+            create_parsed_entry("file1.txt", "c1"),
+            create_parsed_entry("dir1/file2.txt", "c2"),
+            create_parsed_entry("file3.txt", "c3"),
+        ];
+
+        let result = check_for_collisions(&entries, output_dir);
+        assert!(result.is_err());
+        let error_message = result.err().unwrap().to_string();
+        assert!(error_message.contains(&output_dir.join("file1.txt").display().to_string()));
+        assert!(error_message.contains(&output_dir.join("dir1/file2.txt").display().to_string()));
+    }
+
+    #[test]
+    fn test_check_for_collisions_directory_as_file_collision() {
+        let dir = tempdir().unwrap();
+        let output_dir = dir.path();
+        fs::create_dir_all(output_dir.join("item")).unwrap();
+
+        let entries = vec![create_parsed_entry("item", "content")];
+
+        let result = check_for_collisions(&entries, output_dir);
+        assert!(result.is_err());
+        let error_message = result.err().unwrap().to_string();
+        assert!(error_message.contains(&output_dir.join("item").display().to_string()));
+    }
+
+    #[test]
+    fn test_check_for_collisions_file_as_directory_collision() {
+        let dir = tempdir().unwrap();
+        let output_dir = dir.path();
+        File::create(output_dir.join("item")).unwrap();
+
+        let entries = vec![create_parsed_entry("item/another.txt", "content")];
+
+        let result = check_for_collisions(&entries, output_dir);
+        assert!(result.is_err());
+        let error_message = result.err().unwrap().to_string();
+        assert!(error_message.contains(&output_dir.join("item").display().to_string()));
+        assert!(error_message.contains("conflict with directory creation"));
+    }
+
+    #[test]
+    fn test_check_for_collisions_deep_file_as_directory_collision() {
+        let dir = tempdir().unwrap();
+        let output_dir = dir.path();
+        fs::create_dir_all(output_dir.join("level1")).unwrap();
+        File::create(output_dir.join("level1/item")).unwrap();
+
+        let entries = vec![create_parsed_entry("level1/item/another.txt", "content")];
+
+        let result = check_for_collisions(&entries, output_dir);
+        assert!(result.is_err());
+        let error_message = result.err().unwrap().to_string();
+        assert!(error_message.contains(&output_dir.join("level1/item").display().to_string()));
+    }
+
+    #[test]
+    fn test_create_single_file() -> Result<()> {
+        let dir = tempdir()?;
+        let output_dir = dir.path();
+        let entries = vec![create_parsed_entry("file1.txt", "Hello World")];
+
+        create_files_from_bundle(&entries, output_dir)?;
+
+        let file_path = output_dir.join("file1.txt");
+        assert!(file_path.exists());
+        assert_eq!(fs::read_to_string(file_path)?, "Hello World");
+        Ok(())
+    }
+
+    #[test]
+    fn test_create_multiple_files() -> Result<()> {
+        let dir = tempdir()?;
+        let output_dir = dir.path();
+        let entries = vec![
+            create_parsed_entry("file1.txt", "Content 1"),
+            create_parsed_entry("file2.txt", "Content 2"),
+        ];
+
+        create_files_from_bundle(&entries, output_dir)?;
+
+        let file_path1 = output_dir.join("file1.txt");
+        assert!(file_path1.exists());
+        assert_eq!(fs::read_to_string(file_path1)?, "Content 1");
+
+        let file_path2 = output_dir.join("file2.txt");
+        assert!(file_path2.exists());
+        assert_eq!(fs::read_to_string(file_path2)?, "Content 2");
+        Ok(())
+    }
+
+    #[test]
+    fn test_create_files_in_nested_directories() -> Result<()> {
+        let dir = tempdir()?;
+        let output_dir = dir.path();
+        let entries = vec![
+            create_parsed_entry("dir1/file1.txt", "Nested Content 1"),
+            create_parsed_entry("dir1/dir2/file2.txt", "Deeply Nested Content 2"),
+            create_parsed_entry("file3.txt", "Root Content 3"),
+        ];
+
+        create_files_from_bundle(&entries, output_dir)?;
+
+        let path1 = output_dir.join("dir1/file1.txt");
+        assert!(path1.exists());
+        assert_eq!(fs::read_to_string(path1)?, "Nested Content 1");
+        assert!(output_dir.join("dir1").is_dir());
+
+        let path2 = output_dir.join("dir1/dir2/file2.txt");
+        assert!(path2.exists());
+        assert_eq!(fs::read_to_string(path2)?, "Deeply Nested Content 2");
+        assert!(output_dir.join("dir1/dir2").is_dir());
+
+        let path3 = output_dir.join("file3.txt");
+        assert!(path3.exists());
+        assert_eq!(fs::read_to_string(path3)?, "Root Content 3");
+        Ok(())
+    }
+
+    #[test]
+    fn test_create_file_with_empty_content() -> Result<()> {
+        let dir = tempdir()?;
+        let output_dir = dir.path();
+        let entries = vec![create_parsed_entry("empty.txt", "")];
+
+        create_files_from_bundle(&entries, output_dir)?;
+
+        let file_path = output_dir.join("empty.txt");
+        assert!(file_path.exists());
+        assert_eq!(fs::read_to_string(file_path)?, "");
+        Ok(())
+    }
+
+    #[test]
+    fn test_create_files_complex_paths_and_content() -> Result<()> {
+        let dir = tempdir()?;
+        let output_dir = dir.path();
+        let entries = vec![
+            create_parsed_entry("src/main.rs", "fn main() {\n    println!(\"Hello\");\n}"),
+            create_parsed_entry("docs/README.md", "# My Project\n\nThis is a test."),
+            create_parsed_entry("config/settings.toml", "key = \"value\"\nnumber = 123"),
+        ];
+
+        create_files_from_bundle(&entries, output_dir)?;
+
+        let path_rs = output_dir.join("src/main.rs");
+        assert!(path_rs.exists());
+        assert_eq!(
+            fs::read_to_string(path_rs)?,
+            "fn main() {\n    println!(\"Hello\");\n}"
+        );
+        assert!(output_dir.join("src").is_dir());
+
+        let path_md = output_dir.join("docs/README.md");
+        assert!(path_md.exists());
+        assert_eq!(
+            fs::read_to_string(path_md)?,
+            "# My Project\n\nThis is a test."
+        );
+        assert!(output_dir.join("docs").is_dir());
+
+        let path_toml = output_dir.join("config/settings.toml");
+        assert!(path_toml.exists());
+        assert_eq!(
+            fs::read_to_string(path_toml)?,
+            "key = \"value\"\nnumber = 123"
+        );
+        assert!(output_dir.join("config").is_dir());
+
+        Ok(())
+    }
+}
+
+
+
+================================================
 File: src/main.rs
 ================================================
 use clap::Parser;
 use std::path::PathBuf;
+
+mod bundler;
+mod parser;
 
 /// sprout - A CLI tool to sprout files from a bundle.
 #[derive(Parser, Debug)]
@@ -339,34 +690,1265 @@ struct CliArgs {
 fn main() -> anyhow::Result<()> {
     let args = CliArgs::parse();
 
-    // Determine effective input path.
-    // Clap ensures that either `bundle_file_path` or `input` is Some, but not both,
-    // and that at least one of them is provided.
     let bundle_path = match (args.bundle_file_path, args.input) {
         (Some(p), None) => p,
         (None, Some(i)) => i,
-        // The following cases should be prevented by clap's validation:
-        // (None, None) => Error: missing required input (handled by `required_unless_present`)
-        // (Some(_), Some(_)) => Error: conflicting arguments (handled by `conflicts_with`)
         _ => unreachable!("Clap should ensure one input source is exclusively provided and valid."),
     };
 
-    // Determine effective output path.
-    // If -o/--output is provided, it takes precedence.
-    // Otherwise, use the positional `output_directory_path` (which defaults to ".").
     let final_output_path = if let Some(output_flag_path) = args.output {
         output_flag_path
     } else {
         args.output_directory_path
     };
 
-    println!("Effective bundle file path: {:?}", bundle_path);
-    println!("Effective output directory path: {:?}", final_output_path);
+    let parsed_data = parser::parse_bundle(&bundle_path)?;
 
-    // Placeholder for further processing based on Task 1.3
-    // 1. Resolve final input and output paths (done above)
-    // 2. (Stub) Call parser::process_bundle_file(&bundle_path)
-    // 3. (Stub) If parsing/validation successful, call bundler::create_files(parsed_data, &final_output_path)
+    if parsed_data.is_empty() {
+        println!(
+            "Bundle file '{}' is empty or contains no valid entries. Nothing to sprout.",
+            bundle_path.display()
+        );
+        return Ok(());
+    }
+
+    bundler::check_for_collisions(&parsed_data, &final_output_path)?;
+
+    bundler::create_files_from_bundle(&parsed_data, &final_output_path)?;
+
+    println!(
+        "Successfully sprouted {} file(s) from '{}' to '{}'.",
+        parsed_data.len(),
+        bundle_path.display(),
+        final_output_path.display()
+    );
+    Ok(())
+}
+
+
+
+================================================
+File: src/parser.rs
+================================================
+// src/parser.rs
+// Module for parsing the bundle file
+
+use anyhow::{Context, Result, anyhow};
+use std::collections::HashSet;
+use std::fmt;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+const FILE_HEADER_SEPARATOR: &str = "================================================";
+const FILE_PATH_PREFIX: &str = "File: ";
+
+/// Represents a single parsed file entry from the bundle.
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct ParsedEntry {
+    pub path: PathBuf,
+    pub content: String,
+}
+
+/// Specific errors that can occur during bundle parsing and validation.
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum BundleValidationError {
+    ContentBeforeFirstHeader {
+        line_number: usize,
+        content_excerpt: String,
+    },
+    MalformedHeaderMissingFilePrefix {
+        line_number: usize,
+        header_line: String,
+    },
+    MalformedHeaderMissingSeparatorAfterPath {
+        line_number: usize,
+        path_line: String,
+    },
+    MalformedHeaderPathLineInterruptedBySeparator {
+        line_number: usize,
+        path_line: String,
+    },
+    MalformedHeaderPathLineMissingNewline {
+        line_number: usize,
+        path_line: String,
+    },
+    MalformedHeaderMissingNewlineAfterContentSeparator {
+        line_number: usize,
+        separator_line: String,
+    },
+    EmptyPath {
+        line_number: usize,
+    },
+    AbsolutePathNotAllowed {
+        line_number: usize,
+        path: String,
+    },
+    DuplicatePath {
+        line_number: usize,
+        path: String,
+    },
+    PrematureEOFBeforePathLine {
+        line_number: usize,
+    },
+    PrematureEOFBeforeContentSeparator {
+        line_number: usize,
+        path: String,
+    },
+    PrematureEOFBeforeContentSeparatorNewline {
+        line_number: usize,
+        path: String,
+    },
+    UnexpectedContentAfterLastEntry {
+        line_number: usize,
+        content_excerpt: String,
+    },
+}
+
+impl fmt::Display for BundleValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BundleValidationError::ContentBeforeFirstHeader {
+                line_number,
+                content_excerpt,
+            } => write!(
+                f,
+                "L{}: Content found before the first file header. Starts with: \"{}\"",
+                line_number, content_excerpt
+            ),
+            BundleValidationError::MalformedHeaderMissingFilePrefix {
+                line_number,
+                header_line,
+            } => write!(
+                f,
+                "L{}: Malformed file header. Expected '{}' after separator line, found: \"{}\"",
+                line_number, FILE_PATH_PREFIX, header_line
+            ),
+            BundleValidationError::MalformedHeaderMissingSeparatorAfterPath {
+                line_number,
+                path_line,
+            } => write!(
+                f,
+                "L{}: Malformed file header. Expected separator line after path line, found: \"{}\"",
+                line_number, path_line
+            ),
+            BundleValidationError::MalformedHeaderPathLineInterruptedBySeparator {
+                line_number,
+                path_line,
+            } => write!(
+                f,
+                "L{}: Malformed file header. File path line is interrupted by a separator: \"{}\"",
+                line_number, path_line
+            ),
+            BundleValidationError::MalformedHeaderPathLineMissingNewline {
+                line_number,
+                path_line,
+            } => write!(
+                f,
+                "L{}: Malformed file header. File path line does not end with a newline: \"{}\"",
+                line_number, path_line
+            ),
+            BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
+                line_number,
+                separator_line,
+            } => write!(
+                f,
+                "L{}: Malformed file header. Expected newline after content separator line: \"{}\"",
+                line_number, separator_line
+            ),
+            BundleValidationError::EmptyPath { line_number } => {
+                write!(f, "L{}: File path is empty.", line_number)
+            }
+            BundleValidationError::AbsolutePathNotAllowed { line_number, path } => write!(
+                f,
+                "L{}: Absolute path not allowed: \"{}\"",
+                line_number, path
+            ),
+            BundleValidationError::DuplicatePath { line_number, path } => {
+                write!(f, "L{}: Duplicate path found: \"{}\"", line_number, path)
+            }
+            BundleValidationError::PrematureEOFBeforePathLine { line_number } => write!(
+                f,
+                "L{}: Premature EOF. Expected 'File: <path>' line after separator.",
+                line_number
+            ),
+            BundleValidationError::PrematureEOFBeforeContentSeparator { line_number, path } => {
+                write!(
+                    f,
+                    "L{}: Premature EOF for file \"{}\". Expected second separator line after path.",
+                    path, line_number
+                )
+            }
+            BundleValidationError::PrematureEOFBeforeContentSeparatorNewline {
+                line_number,
+                path,
+            } => write!(
+                f,
+                "L{}: Premature EOF for file \"{}\". Expected newline after content separator.",
+                path, line_number
+            ),
+            BundleValidationError::UnexpectedContentAfterLastEntry {
+                line_number,
+                content_excerpt,
+            } => write!(
+                f,
+                "L{}: Unexpected content found after the last valid file entry. Starts with: \"{}\"",
+                line_number, content_excerpt
+            ),
+        }
+    }
+}
+
+/// Container for multiple validation errors.
+#[derive(Debug)]
+pub struct BundleParseError {
+    pub errors: Vec<BundleValidationError>,
+}
+
+impl fmt::Display for BundleParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(
+            f,
+            "Bundle parsing failed with {} error(s):",
+            self.errors.len()
+        )?;
+        for error in &self.errors {
+            writeln!(f, "- {}", error)?;
+        }
+        Ok(())
+    }
+}
+
+impl std::error::Error for BundleParseError {}
+
+/// Parses a bundle file, extracting file paths and their content, and validating the format.
+///
+/// Collects all format errors found in the bundle.
+pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
+    let bundle_content = fs::read_to_string(bundle_path)
+        .with_context(|| format!("Failed to read bundle file: {:?}", bundle_path))?;
+
+    if bundle_content.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let mut entries = Vec::new();
+    let mut validation_errors = Vec::new();
+    let mut paths_seen = HashSet::new();
+
+    let lines: Vec<&str> = bundle_content.lines().collect();
+
+    let mut first_header_line_idx: Option<usize> = None;
+    for (idx, line_content) in lines.iter().enumerate() {
+        if line_content.trim_start().starts_with(FILE_HEADER_SEPARATOR)
+            && idx + 1 < lines.len()
+            && lines[idx + 1].trim_start().starts_with(FILE_PATH_PREFIX)
+        {
+            first_header_line_idx = Some(idx);
+            break;
+        }
+    }
+
+    let mut start_processing_from_line_idx = 0;
+    let mut skipped_pre_header_line_numbers: Vec<usize> = Vec::new();
+
+    if let Some(fh_idx) = first_header_line_idx {
+        for (line_idx, line_content) in lines.iter().enumerate().take(fh_idx) {
+            if !line_content.trim().is_empty() {
+                skipped_pre_header_line_numbers.push(line_idx + 1);
+            }
+        }
+
+        if !skipped_pre_header_line_numbers.is_empty() {
+            let min_line = *skipped_pre_header_line_numbers.iter().min().unwrap();
+            let max_line = *skipped_pre_header_line_numbers.iter().max().unwrap();
+            if min_line == max_line {
+                eprintln!(
+                    "Warning: Line {} excluded due to content before the first file header.",
+                    min_line
+                );
+            } else {
+                eprintln!(
+                    "Warning: Lines {}-{} excluded due to content before the first file header.",
+                    min_line, max_line
+                );
+            }
+        }
+        start_processing_from_line_idx = fh_idx;
+    } else if !bundle_content.trim().is_empty() {
+        let first_actual_content_line_str = lines
+            .iter()
+            .find(|line| !line.trim().is_empty())
+            .map_or("", |line| line.trim());
+
+        validation_errors.push(BundleValidationError::ContentBeforeFirstHeader {
+            line_number: 1,
+            content_excerpt: first_actual_content_line_str.chars().take(50).collect(),
+        });
+    }
+
+    let mut current_bundle_offset = 0;
+    for line_content_str in lines.iter().take(start_processing_from_line_idx) {
+        current_bundle_offset += line_content_str.len() + 1;
+    }
+
+    while current_bundle_offset < bundle_content.len() {
+        let remaining_content = &bundle_content[current_bundle_offset..];
+        let search_start_line = bundle_content[..current_bundle_offset].lines().count();
+
+        match remaining_content.find(FILE_HEADER_SEPARATOR) {
+            Some(header_relative_start) => {
+                let header_absolute_start = current_bundle_offset + header_relative_start;
+                let header_line_number =
+                    bundle_content[..header_absolute_start].lines().count() + 1;
+
+                let skipped_content = &bundle_content[current_bundle_offset..header_absolute_start];
+                if !skipped_content.trim().is_empty() {
+                    validation_errors.push(
+                        BundleValidationError::UnexpectedContentAfterLastEntry {
+                            line_number: search_start_line,
+                            content_excerpt: skipped_content
+                                .trim()
+                                .lines()
+                                .next()
+                                .unwrap_or("")
+                                .chars()
+                                .take(50)
+                                .collect(),
+                        },
+                    );
+                }
+
+                let current_separator_line_num = header_line_number;
+
+                let after_first_sep_start = header_absolute_start + FILE_HEADER_SEPARATOR.len();
+                if after_first_sep_start >= bundle_content.len() {
+                    validation_errors.push(BundleValidationError::PrematureEOFBeforePathLine {
+                        line_number: current_separator_line_num,
+                    });
+                    current_bundle_offset = bundle_content.len();
+                    continue;
+                }
+                if bundle_content.as_bytes()[after_first_sep_start] != b'\n' {
+                    validation_errors.push(
+                        BundleValidationError::MalformedHeaderMissingFilePrefix {
+                            line_number: current_separator_line_num + 1,
+                            header_line: bundle_content[after_first_sep_start..]
+                                .lines()
+                                .next()
+                                .unwrap_or("")
+                                .trim_end()
+                                .to_string(),
+                        },
+                    );
+                    current_bundle_offset = bundle_content.len();
+                    continue;
+                }
+                let path_line_num = current_separator_line_num + 1;
+
+                let path_line_start = after_first_sep_start + 1;
+                if path_line_start >= bundle_content.len() {
+                    validation_errors.push(BundleValidationError::PrematureEOFBeforePathLine {
+                        line_number: path_line_num,
+                    });
+                    current_bundle_offset = bundle_content.len();
+                    continue;
+                }
+                if !bundle_content[path_line_start..].starts_with(FILE_PATH_PREFIX) {
+                    validation_errors.push(
+                        BundleValidationError::MalformedHeaderMissingFilePrefix {
+                            line_number: path_line_num,
+                            header_line: bundle_content[path_line_start..]
+                                .lines()
+                                .next()
+                                .unwrap_or("")
+                                .to_string(),
+                        },
+                    );
+                    current_bundle_offset = bundle_content.len();
+                    continue;
+                }
+
+                let path_actual_start = path_line_start + FILE_PATH_PREFIX.len();
+                let path_line_terminator_search_slice = &bundle_content[path_actual_start..];
+                let newline_pos_in_slice = path_line_terminator_search_slice.find('\n');
+
+                let path_str_end_offset = match newline_pos_in_slice {
+                    Some(nl_idx) => {
+                        if path_line_terminator_search_slice[..nl_idx]
+                            .contains(FILE_HEADER_SEPARATOR)
+                        {
+                            validation_errors.push(BundleValidationError::MalformedHeaderPathLineInterruptedBySeparator {
+                                line_number: path_line_num,
+                                path_line: bundle_content[path_actual_start .. path_actual_start + nl_idx].trim_end().to_string(),
+                            });
+                            current_bundle_offset = bundle_content.len();
+                            continue;
+                        }
+                        path_actual_start + nl_idx
+                    }
+                    None => {
+                        validation_errors.push(
+                            BundleValidationError::MalformedHeaderPathLineMissingNewline {
+                                line_number: path_line_num,
+                                path_line: path_line_terminator_search_slice
+                                    .lines()
+                                    .next()
+                                    .unwrap_or("")
+                                    .trim_end()
+                                    .to_string(),
+                            },
+                        );
+                        current_bundle_offset = bundle_content.len();
+                        continue;
+                    }
+                };
+
+                let file_path_str = bundle_content[path_actual_start..path_str_end_offset].trim();
+                if file_path_str.is_empty() {
+                    validation_errors.push(BundleValidationError::EmptyPath {
+                        line_number: path_line_num,
+                    });
+                }
+
+                let path = PathBuf::from(file_path_str);
+                if path.is_absolute() {
+                    validation_errors.push(BundleValidationError::AbsolutePathNotAllowed {
+                        line_number: path_line_num,
+                        path: file_path_str.to_string(),
+                    });
+                }
+                if !file_path_str.is_empty()
+                    && !path.is_absolute()
+                    && !paths_seen.insert(path.clone())
+                {
+                    validation_errors.push(BundleValidationError::DuplicatePath {
+                        line_number: path_line_num,
+                        path: file_path_str.to_string(),
+                    });
+                }
+                let second_sep_line_num = path_line_num + 1;
+
+                let second_sep_start = path_str_end_offset + 1;
+                if second_sep_start >= bundle_content.len() {
+                    validation_errors.push(
+                        BundleValidationError::PrematureEOFBeforeContentSeparator {
+                            line_number: second_sep_line_num,
+                            path: file_path_str.to_string(),
+                        },
+                    );
+                    current_bundle_offset = bundle_content.len();
+                    continue;
+                }
+                if !bundle_content[second_sep_start..].starts_with(FILE_HEADER_SEPARATOR) {
+                    validation_errors.push(
+                        BundleValidationError::MalformedHeaderMissingSeparatorAfterPath {
+                            line_number: second_sep_line_num,
+                            path_line: file_path_str.to_string(),
+                        },
+                    );
+                    current_bundle_offset = bundle_content.len();
+                    continue;
+                }
+
+                let after_second_sep_start = second_sep_start + FILE_HEADER_SEPARATOR.len();
+                if after_second_sep_start >= bundle_content.len() {
+                    validation_errors.push(
+                        BundleValidationError::PrematureEOFBeforeContentSeparatorNewline {
+                            line_number: second_sep_line_num,
+                            path: file_path_str.to_string(),
+                        },
+                    );
+                    current_bundle_offset = bundle_content.len();
+                    continue;
+                }
+                if bundle_content.as_bytes()[after_second_sep_start] != b'\n' {
+                    validation_errors.push(
+                        BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
+                            line_number: second_sep_line_num,
+                            separator_line: bundle_content[second_sep_start
+                                ..std::cmp::min(
+                                    bundle_content.len(),
+                                    second_sep_start + FILE_HEADER_SEPARATOR.len(),
+                                )]
+                                .trim_end()
+                                .to_string(),
+                        },
+                    );
+                    current_bundle_offset = bundle_content.len();
+                    continue;
+                }
+
+                let content_actual_start = after_second_sep_start + 1;
+
+                let next_entry_header_search_start = content_actual_start;
+                let content_end_offset = bundle_content[next_entry_header_search_start..]
+                    .find(FILE_HEADER_SEPARATOR)
+                    .map(|pos| next_entry_header_search_start + pos)
+                    .unwrap_or_else(|| bundle_content.len());
+
+                let content = bundle_content[content_actual_start..content_end_offset].to_string();
+
+                if !file_path_str.is_empty() && !path.is_absolute() {
+                    entries.push(ParsedEntry { path, content });
+                }
+
+                current_bundle_offset = content_end_offset;
+            }
+            None => {
+                let final_remaining_content = &bundle_content[current_bundle_offset..];
+                if !final_remaining_content.trim().is_empty() && !entries.is_empty() {
+                    validation_errors.push(
+                        BundleValidationError::UnexpectedContentAfterLastEntry {
+                            line_number: bundle_content[..current_bundle_offset].lines().count()
+                                + 1,
+                            content_excerpt: final_remaining_content
+                                .trim()
+                                .lines()
+                                .next()
+                                .unwrap_or("")
+                                .chars()
+                                .take(50)
+                                .collect(),
+                        },
+                    );
+                }
+                current_bundle_offset = bundle_content.len();
+            }
+        }
+    }
+
+    if !validation_errors.is_empty() {
+        return Err(anyhow!(BundleParseError {
+            errors: validation_errors
+        }));
+    }
+
+    Ok(entries)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    fn create_temp_bundle_file(content: &str) -> NamedTempFile {
+        let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
+        write!(temp_file, "{}", content).expect("Failed to write to temp file");
+        temp_file
+    }
+
+    fn assert_specific_error(
+        result: &Result<Vec<ParsedEntry>, anyhow::Error>,
+        expected_error: BundleValidationError,
+    ) {
+        match result {
+            Err(err) => {
+                if let Some(bundle_parse_error) = err.downcast_ref::<BundleParseError>() {
+                    assert!(
+                        bundle_parse_error.errors.contains(&expected_error),
+                        "Expected error {:?} not found in {:?}",
+                        expected_error,
+                        bundle_parse_error.errors
+                    );
+                } else {
+                    panic!("Error is not a BundleParseError: {:?}", err);
+                }
+            }
+            Ok(_) => panic!("Expected error, but got Ok"),
+        }
+    }
+
+    #[test]
+    fn test_parse_empty_bundle_file() {
+        let temp_file = create_temp_bundle_file("");
+        let entries = parse_bundle(temp_file.path()).unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn test_parse_bundle_file_with_only_whitespace() {
+        let temp_file = create_temp_bundle_file("   \n\t  \n");
+        let entries = parse_bundle(temp_file.path()).unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn test_error_content_before_first_header() {
+        let bundle_content = format!(
+            "Some introductory text.\n\
+            {}\n\
+            {}path/to/file1.txt\n\
+            {}\n\
+            Content of file1.",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert!(result.is_ok(), "Expected Ok, got {:?}", result);
+        let entries = result.unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].path, PathBuf::from("path/to/file1.txt"));
+        assert_eq!(entries[0].content, "Content of file1.");
+    }
+
+    #[test]
+    fn test_error_content_before_first_header_no_valid_header_at_all() {
+        let temp_file =
+            create_temp_bundle_file("This is just some text, no valid file entries at all.");
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::ContentBeforeFirstHeader {
+                line_number: 1,
+                content_excerpt: "This is just some text, no valid file entries at a".to_string(),
+            },
+        );
+    }
+
+    #[test]
+    fn test_parse_single_entry() {
+        let bundle_content = format!(
+            "{}\n\
+            {}file.txt\n\
+            {}\n\
+            Hello, world!",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let entries = parse_bundle(temp_file.path()).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].path, PathBuf::from("file.txt"));
+        assert_eq!(entries[0].content, "Hello, world!");
+    }
+
+    #[test]
+    fn test_parse_multiple_entries() {
+        let bundle_content = format!(
+            "{}\n\
+            {}file1.txt\n\
+            {}\n\
+            Content of file1.\n\
+            {}\n\
+            {}path/to/file2.rs\n\
+            {}\n\
+            // Rust code\nfn main() {{}}\n\
+            {}\n\
+            {}another.md\n\
+            {}\n\
+            ## Markdown Content",
+            FILE_HEADER_SEPARATOR,
+            FILE_PATH_PREFIX,
+            FILE_HEADER_SEPARATOR,
+            FILE_HEADER_SEPARATOR,
+            FILE_PATH_PREFIX,
+            FILE_HEADER_SEPARATOR,
+            FILE_HEADER_SEPARATOR,
+            FILE_PATH_PREFIX,
+            FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let entries = parse_bundle(temp_file.path()).unwrap();
+        assert_eq!(entries.len(), 3);
+
+        assert_eq!(entries[0].path, PathBuf::from("file1.txt"));
+        assert_eq!(entries[0].content, "Content of file1.\n");
+
+        assert_eq!(entries[1].path, PathBuf::from("path/to/file2.rs"));
+        assert_eq!(entries[1].content, "// Rust code\nfn main() {}\n");
+
+        assert_eq!(entries[2].path, PathBuf::from("another.md"));
+        assert_eq!(entries[2].content, "## Markdown Content");
+    }
+
+    #[test]
+    fn test_parse_entry_with_empty_content() {
+        let bundle_content = format!(
+            "{}\n\
+            {}empty_file.txt\n\
+            {}\n",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let entries = parse_bundle(temp_file.path()).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].path, PathBuf::from("empty_file.txt"));
+        assert_eq!(entries[0].content, "");
+    }
+
+    #[test]
+    fn test_error_malformed_header_missing_file_prefix() {
+        let bundle_content = format!(
+            "{}\n\
+            Not File: path/to/file.txt\n\
+            {}\n\
+            Content",
+            FILE_HEADER_SEPARATOR, FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::MalformedHeaderMissingFilePrefix {
+                line_number: 2,
+                header_line: "Not File: path/to/file.txt".to_string(),
+            },
+        );
+    }
+
+    #[test]
+    fn test_error_malformed_header_missing_separator_after_path() {
+        let bundle_content = format!(
+            "{}\n\
+            {}path/to/file.txt\n\
+            Content without second separator",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::MalformedHeaderMissingSeparatorAfterPath {
+                line_number: 3,
+                path_line: "path/to/file.txt".to_string(),
+            },
+        );
+    }
+
+    #[test]
+    fn test_error_path_line_interrupted_by_separator() {
+        let bundle_content = format!(
+            "{}\n\
+            {}path/to{}file.txt\n\
+            {}\n\
+            Content",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, FILE_HEADER_SEPARATOR, FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::MalformedHeaderPathLineInterruptedBySeparator {
+                line_number: 2,
+                path_line: format!("path/to{}file.txt", FILE_HEADER_SEPARATOR),
+            },
+        );
+    }
+
+    #[test]
+    fn test_error_path_line_missing_newline() {
+        let bundle_content = format!(
+            "{}\n\
+            {}path/to/file.txt",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::MalformedHeaderPathLineMissingNewline {
+                line_number: 2,
+                path_line: "path/to/file.txt".to_string(),
+            },
+        );
+    }
+
+    #[test]
+    fn test_error_missing_newline_after_content_separator() {
+        let bundle_content = format!(
+            "{}\n\
+            {}file.txt\n\
+            {}{}",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, FILE_HEADER_SEPARATOR, "NoNewlineContent"
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
+                line_number: 3,
+                separator_line: FILE_HEADER_SEPARATOR.to_string(),
+            },
+        );
+    }
+
+    #[test]
+    fn test_error_empty_path() {
+        let bundle_content = format!(
+            "{}\n\
+            {}\n\
+            {}\n\
+            Content",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(&result, BundleValidationError::EmptyPath { line_number: 2 });
+    }
+
+    #[test]
+    fn test_error_absolute_path() {
+        let absolute_path_str = "/an/absolute/path.txt";
+        let bundle_content = format!(
+            "{}\n\
+            {}{}\n\
+            {}\n\
+            Content",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, absolute_path_str, FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::AbsolutePathNotAllowed {
+                line_number: 2,
+                path: absolute_path_str.to_string(),
+            },
+        );
+    }
+
+    #[test]
+    fn test_error_duplicate_path() {
+        let bundle_content = format!(
+            "{}\n\
+            {}file.txt\n\
+            {}\n\
+            Content1\n\
+            {}\n\
+            {}file.txt\n\
+            {}\n\
+            Content2",
+            FILE_HEADER_SEPARATOR,
+            FILE_PATH_PREFIX,
+            FILE_HEADER_SEPARATOR,
+            FILE_HEADER_SEPARATOR,
+            FILE_PATH_PREFIX,
+            FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::DuplicatePath {
+                line_number: 6,
+                path: "file.txt".to_string(),
+            },
+        );
+    }
+
+    #[test]
+    fn test_error_premature_eof_after_first_separator() {
+        let bundle_content = FILE_HEADER_SEPARATOR;
+        let temp_file = create_temp_bundle_file(bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::PrematureEOFBeforePathLine { line_number: 1 },
+        );
+    }
+
+    #[test]
+    fn test_error_premature_eof_after_file_prefix() {
+        let bundle_content = format!("{}\n{}", FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX);
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::MalformedHeaderPathLineMissingNewline {
+                line_number: 2,
+                path_line: "".to_string(),
+            },
+        );
+    }
+
+    #[test]
+    fn test_error_premature_eof_after_path_line() {
+        let bundle_content = format!("{}\n{}path.txt", FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX);
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert_specific_error(
+            &result,
+            BundleValidationError::MalformedHeaderPathLineMissingNewline {
+                line_number: 2,
+                path_line: "path.txt".to_string(),
+            },
+        );
+    }
+
+    #[test]
+    fn test_error_unexpected_content_after_last_entry() {
+        let bundle_content = format!(
+            "{}\n\
+            {}file.txt\n\
+            {}\n\
+            Content\n\
+            Some trailing garbage text.",
+            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+        assert!(result.is_ok(), "Expected Ok, got {:?}", result);
+        let entries = result.unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].path, PathBuf::from("file.txt"));
+        assert_eq!(entries[0].content, "Content\nSome trailing garbage text.");
+    }
+
+    #[test]
+    fn test_multiple_errors_reported() {
+        let bundle_content = format!(
+            "Leading garbage.\n\
+            {}\n\
+            {}/abs/path.txt\n\
+            {}\n\
+            Content1\n\
+            {}\n\
+            {}\n\
+            {}\n\
+            Content2\n\
+            Trailing garbage.",
+            FILE_HEADER_SEPARATOR,
+            FILE_PATH_PREFIX,
+            FILE_HEADER_SEPARATOR,
+            FILE_HEADER_SEPARATOR,
+            FILE_PATH_PREFIX,
+            FILE_HEADER_SEPARATOR
+        );
+        let temp_file = create_temp_bundle_file(&bundle_content);
+        let result = parse_bundle(temp_file.path());
+
+        assert!(result.is_err());
+        if let Err(err) = result {
+            if let Some(bundle_parse_error) = err.downcast_ref::<BundleParseError>() {
+                assert_eq!(
+                    bundle_parse_error.errors.len(),
+                    2,
+                    "Expected 2 errors, got {}. Errors: {:?}",
+                    bundle_parse_error.errors.len(),
+                    bundle_parse_error.errors
+                );
+
+                assert!(
+                    !bundle_parse_error.errors.contains(
+                        &BundleValidationError::ContentBeforeFirstHeader {
+                            line_number: 1,
+                            content_excerpt: "Leading garbage.".to_string()
+                        }
+                    ),
+                    "ContentBeforeFirstHeader should now be a warning, not an error."
+                );
+
+                assert!(bundle_parse_error.errors.contains(
+                    &BundleValidationError::AbsolutePathNotAllowed {
+                        line_number: 3,
+                        path: "/abs/path.txt".to_string()
+                    }
+                ));
+                assert!(
+                    bundle_parse_error
+                        .errors
+                        .contains(&BundleValidationError::EmptyPath { line_number: 7 })
+                );
+            } else {
+                panic!("Error is not a BundleParseError: {:?}", err);
+            }
+        } else {
+            panic!("Expected an error, but got Ok. Result: {:?}", result);
+        }
+    }
+}
+
+
+
+================================================
+File: tests/integration_tests.rs
+================================================
+use assert_cmd::prelude::*; // Add methods on commands
+use predicates::prelude::*; // Used for writing assertions
+use std::fs;
+use std::io::Write;
+use std::process::Command; // Run programs
+use tempfile::NamedTempFile;
+use tempfile::TempDir;
+
+// Helper function to create a temporary bundle file with given content
+fn create_temp_bundle_file(content: &str) -> NamedTempFile {
+    let mut file = NamedTempFile::new().expect("Failed to create temp bundle file");
+    // Use write! to avoid adding an extra newline to the content string itself
+    // The parser and bundler should handle content with or without trailing newlines correctly,
+    // as a user might create them.
+    write!(file, "{}", content).expect("Failed to write to temp bundle file");
+    file
+}
+
+#[test]
+fn test_valid_bundle_simple_structure() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: file1.txt\n================================================\nHello from file1\n================================================\nFile: file2.txt\n================================================\nContent of file2\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path()).arg(output_dir.path());
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(format!(
+            "Successfully sprouted 2 file(s) from '{}' to '{}'.",
+            bundle_file.path().display(),
+            output_dir.path().display()
+        )));
+
+    let file1_path = output_dir.path().join("file1.txt");
+    let file2_path = output_dir.path().join("file2.txt");
+
+    assert!(file1_path.exists());
+    assert_eq!(fs::read_to_string(file1_path)?, "Hello from file1\n");
+
+    assert!(file2_path.exists());
+    assert_eq!(fs::read_to_string(file2_path)?, "Content of file2\n");
+
+    Ok(())
+}
+
+#[test]
+fn test_valid_bundle_nested_structure() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: dir1/file1.txt\n================================================\nNested content\n================================================\nFile: dir1/dir2/file2.txt\n================================================\nDeeply nested\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path()).arg(output_dir.path());
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(format!(
+            "Successfully sprouted 2 file(s) from '{}' to '{}'.",
+            bundle_file.path().display(),
+            output_dir.path().display()
+        )));
+
+    let file1_path = output_dir.path().join("dir1/file1.txt");
+    let file2_path = output_dir.path().join("dir1/dir2/file2.txt");
+
+    assert!(file1_path.exists());
+    assert_eq!(fs::read_to_string(file1_path)?, "Nested content\n");
+
+    assert!(file2_path.exists());
+    assert_eq!(fs::read_to_string(file2_path)?, "Deeply nested\n");
+
+    Ok(())
+}
+
+#[test]
+fn test_malformed_bundle_file() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: file1.txt\nThis is not a valid header\nContent\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path()).arg(output_dir.path());
+
+    cmd.assert().failure().stderr(
+        predicate::str::contains("Bundle parsing failed")
+            .and(predicate::str::contains("Malformed file header")),
+    );
+
+    // Ensure no files were created
+    assert!(fs::read_dir(output_dir.path())?.next().is_none());
+
+    Ok(())
+}
+
+#[test]
+fn test_output_file_collision() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: existing_file.txt\n================================================\nSome content\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+
+    // Create a conflicting file
+    let conflicting_file_path = output_dir.path().join("existing_file.txt");
+    fs::write(&conflicting_file_path, "Original content")?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path()).arg(output_dir.path());
+
+    cmd.assert().failure().stderr(
+        predicate::str::contains("Output path collision detected").and(predicate::str::contains(
+            conflicting_file_path.to_str().unwrap(),
+        )),
+    );
+
+    // Ensure the original file was not overwritten
+    assert_eq!(
+        fs::read_to_string(conflicting_file_path)?,
+        "Original content"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_empty_bundle_file() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_file = create_temp_bundle_file("");
+    let output_dir = TempDir::new()?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path()).arg(output_dir.path());
+
+    cmd.assert()
+        .success() // Empty bundle is not an error, just nothing to do
+        .stdout(predicate::str::contains(format!(
+            "Bundle file '{}' is empty or contains no valid entries. Nothing to sprout.",
+            bundle_file.path().display()
+        )));
+
+    // Ensure no files were created
+    assert!(fs::read_dir(output_dir.path())?.next().is_none());
+    Ok(())
+}
+
+#[test]
+fn test_output_to_current_directory_default() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: default_dir_file.txt\n================================================\nDefault dir test\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+
+    // Create a temporary directory to act as the "current directory" for the test
+    let current_dir_scope = TempDir::new()?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.current_dir(current_dir_scope.path()) // Set current directory for the command
+        .arg(bundle_file.path()); // No output dir specified, should default to current_dir_scope
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(format!(
+            "Successfully sprouted 1 file(s) from '{}' to '{}'.",
+            bundle_file.path().display(),
+            "." // Output path should be displayed as "."
+        )));
+
+    let file_path = current_dir_scope.path().join("default_dir_file.txt");
+    assert!(file_path.exists());
+    assert_eq!(fs::read_to_string(file_path)?, "Default dir test\n");
+
+    Ok(())
+}
+
+#[test]
+fn test_output_to_specified_directory_via_positional_arg() -> Result<(), Box<dyn std::error::Error>>
+{
+    let bundle_content = "================================================\nFile: specified_pos_file.txt\n================================================\nSpecified dir test - positional\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path()).arg(output_dir.path());
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(format!(
+            "Successfully sprouted 1 file(s) from '{}' to '{}'.",
+            bundle_file.path().display(),
+            output_dir.path().display()
+        )));
+
+    let file_path = output_dir.path().join("specified_pos_file.txt");
+    assert!(file_path.exists());
+    assert_eq!(
+        fs::read_to_string(file_path)?,
+        "Specified dir test - positional\n"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_output_to_specified_directory_via_o_flag() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: specified_flag_file.txt\n================================================\nSpecified dir test - flag\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path()) // Can also use -i for input
+        .arg("-o")
+        .arg(output_dir.path());
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(format!(
+            "Successfully sprouted 1 file(s) from '{}' to '{}'.",
+            bundle_file.path().display(),
+            output_dir.path().display()
+        )));
+
+    let file_path = output_dir.path().join("specified_flag_file.txt");
+    assert!(file_path.exists());
+    assert_eq!(
+        fs::read_to_string(file_path)?,
+        "Specified dir test - flag\n"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_input_via_i_flag() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: input_flag_test.txt\n================================================\nInput via -i flag\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg("-i")
+        .arg(bundle_file.path())
+        .arg("-o")
+        .arg(output_dir.path());
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(format!(
+            "Successfully sprouted 1 file(s) from '{}' to '{}'.",
+            bundle_file.path().display(),
+            output_dir.path().display()
+        )));
+
+    let file_path = output_dir.path().join("input_flag_test.txt");
+    assert!(file_path.exists());
+    assert_eq!(fs::read_to_string(file_path)?, "Input via -i flag\n");
+
+    Ok(())
+}
+
+#[test]
+fn test_missing_input_bundle() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::cargo_bin("sprout")?;
+    // No input argument provided
+    cmd.assert().failure().stderr(
+        predicate::str::contains("error: the following required arguments were not provided:")
+            .and(predicate::str::contains("<BUNDLE_FILE_PATH>")),
+    );
+    Ok(())
+}
+
+#[test]
+fn test_bundle_with_empty_file_content() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: empty_file.txt\n================================================\n"; // Empty content
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path()).arg(output_dir.path());
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(format!(
+            "Successfully sprouted 1 file(s) from '{}' to '{}'.",
+            bundle_file.path().display(),
+            output_dir.path().display()
+        )));
+
+    let file_path = output_dir.path().join("empty_file.txt");
+    assert!(file_path.exists());
+    assert_eq!(fs::read_to_string(file_path)?, ""); // Content should be empty string
 
     Ok(())
 }

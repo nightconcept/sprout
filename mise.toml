@@ -24,6 +24,7 @@ description = "Prepare for commit."
 run = [
   "cargo fmt --all",
   "cargo clippy --all-targets -- -D warnings",
+  "cargo test",
   "cargo build",
   "gitingest -o docs/digest.txt -e *.toml,*.txt,.roo/*,.cursor/*,build/*,.devenv/*,.direnv/*,docs/digest.txt,docs/archive/* .",
 ]

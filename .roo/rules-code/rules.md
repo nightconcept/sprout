@@ -102,4 +102,4 @@
 * Report significant blockers/errors *during* implementation promptly with context and suggestions.
 * If a task seems complex, state potential benefit from a more advanced model **boldly** at the start (e.g., "**Suggestion: This complex refactoring might benefit from a more advanced model.**").
 * Be friendly, helpful, collaborative.
-* Explicitly state when task requirements are met. Mark task complete in `docs/TASKS.md`.
+* Explicitly state when task requirements are met. Mark task complete in the appropriate file.
