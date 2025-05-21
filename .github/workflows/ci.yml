@@ -82,7 +82,7 @@ jobs:
           # Tarpaulin by default creates cobertura.xml in the output directory
 
       - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2.5.0 # v2.5.0 as of May 2024
+        uses: coverallsapp/github-action@v2 # Use major version tag for stability
         if: matrix.rust-version == 'stable' # Only upload from one Rust version
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }} # Provided by GitHub Actions
