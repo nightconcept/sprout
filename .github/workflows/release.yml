@@ -23,10 +23,10 @@ jobs:
 
       - name: Release Please
         id: release
-        uses: google-github-actions/release-please-action@e4dc86ba9405554aeba3c6bb2d169500e7d3b4ee # v4.1.1
+        uses: googleapis/release-please-action@v4
         with:
           release-type: rust
-          package-name: sprout
+          # package-name: sprout # This input is deprecated for release-type: rust
           # Optional: Define a custom token if needed, though default GITHUB_TOKEN often works.
           # token: ${{ secrets.GITHUB_TOKEN }}
           # Optional: If you want release-please to create a PR instead of releasing directly

@@ -174,3 +174,11 @@
     - Create a GitHub Release with the changelog and release assets.
   - [x] Configure the workflow to build release binaries for common platforms (Linux, macOS, Windows).
   - [x] Document the release process and how to trigger it.
+- [x] **Task 4.3: Fix GitHub Actions Workflow Permission Warnings** (2025-05-21)
+  - [x] Review and address permission warnings reported for GitHub Actions workflows.
+  - [x] Ensure workflows use the principle of least privilege.
+  - [ ] Target warnings:
+    - `Warn: topLevel 'security-events' permission set to 'write': .github/workflows/ci.yml:5`
+    - `Warn: topLevel 'contents' permission set to 'write': .github/workflows/release.yml:9`
+    - `Info: topLevel permissions set to 'read-all': .github/workflows/scorecards.yml:18`
+  - [ ] Verify other 'Info' level read permissions are appropriate.

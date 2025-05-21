@@ -58,24 +58,7 @@ sprout --input <BUNDLE_FILE_PATH> --output <OUTPUT_DIRECTORY_PATH>
 *   `BUNDLE_FILE_PATH`: (Positional or via `-i`/`--input`) Path to the bundle file. This is **required**.
 *   `OUTPUT_DIRECTORY_PATH`: (Positional or via `-o`/`--output`) Path to the directory where files will be sprouted.
     *   Defaults to the current working directory if not specified.
-
-## 🧪 Testing
-
-This project uses Rust's built-in testing framework.
-
-*   **Run all tests:**
-    ```bash
-    cargo test
-    ```
-*   **Run tests with verbose output:**
-    ```bash
-    cargo test -- --nocapture
-    ```
-*   **Check code coverage (requires `cargo-tarpaulin`):**
-    ```bash
-    cargo tarpaulin --verbose --all-features --workspace --engine Llvm --out Xml --output-dir target/tarpaulin
-    ```
-    Coverage reports are uploaded to Coveralls on pushes to `main`.
+target/tarpaulin
 
 ## 🔮 Future Ideas
 
