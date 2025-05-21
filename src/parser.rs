@@ -379,21 +379,40 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
                 }
 
                 let path = PathBuf::from(file_path_str);
-                if path.is_absolute() {
-                    validation_errors.push(BundleValidationError::AbsolutePathNotAllowed {
-                        line_number: path_line_num,
-                        path: file_path_str.to_string(),
-                    });
+                // This variable will track if the current entry is valid for actual use,
+                // considering emptiness, path type, and duplication.
+                let mut is_valid_for_adding_to_entries = !file_path_str.is_empty();
+
+                if !file_path_str.is_empty() {
+                    let first_component = path.components().next();
+                    let is_problematic_path_type = path.is_absolute()
+                        || matches!(
+                            first_component,
+                            Some(std::path::Component::RootDir)
+                                | Some(std::path::Component::Prefix(_))
+                        );
+
+                    if is_problematic_path_type {
+                        validation_errors.push(BundleValidationError::AbsolutePathNotAllowed {
+                            line_number: path_line_num,
+                            path: file_path_str.to_string(),
+                        });
+                        is_valid_for_adding_to_entries = false;
+                    }
+
+                    // For duplicate check: only consider if not already invalidated by path type.
+                    // `paths_seen` should only store valid, relative paths.
+                    if is_valid_for_adding_to_entries && !paths_seen.insert(path.clone()) {
+                        validation_errors.push(BundleValidationError::DuplicatePath {
+                            line_number: path_line_num,
+                            path: file_path_str.to_string(),
+                        });
+                        is_valid_for_adding_to_entries = false; // Mark as invalid if duplicate
+                    }
                 }
-                if !file_path_str.is_empty()
-                    && !path.is_absolute()
-                    && !paths_seen.insert(path.clone())
-                {
-                    validation_errors.push(BundleValidationError::DuplicatePath {
-                        line_number: path_line_num,
-                        path: file_path_str.to_string(),
-                    });
-                }
+                // If file_path_str was empty, is_valid_for_adding_to_entries is already false,
+                // and an EmptyPath error was added earlier.
+
                 let second_sep_line_num = path_line_num + 1;
 
                 let second_sep_start = path_str_end_offset + 1;
@@ -456,7 +475,7 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
 
                 let content = bundle_content[content_actual_start..content_end_offset].to_string();
 
-                if !file_path_str.is_empty() && !path.is_absolute() {
+                if is_valid_for_adding_to_entries {
                     entries.push(ParsedEntry { path, content });
                 }
 

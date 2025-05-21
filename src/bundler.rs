@@ -211,7 +211,15 @@ mod tests {
         let result = check_for_collisions(&entries, output_dir);
         assert!(result.is_err());
         let error_message = result.err().unwrap().to_string();
-        assert!(error_message.contains(&output_dir.join("level1/item").display().to_string()));
+        // Different OS path separators might cause issues, so we compare with both forms
+        let expected_path = output_dir.join("level1").join("item");
+        assert!(
+            error_message.contains(&expected_path.display().to_string()) || 
+            error_message.contains(&expected_path.display().to_string().replace("\\", "/")),
+            "Error message '{}' doesn't contain path '{}'", 
+            error_message, 
+            expected_path.display()
+        );
     }
 
     #[test]
