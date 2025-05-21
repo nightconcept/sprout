@@ -159,3 +159,18 @@
 - [ ] Research and implement packaging/distribution methods for the Rust binary (e.g., `cargo-dist`, GitHub Releases assets, AUR, Homebrew).
 - [ ] Performance benchmarking and optimization for very large bundle files or a high number of files.
 - [x] **Task 4.1: Create Project README** (2025-05-20) - Create a cool README.md with emojis, project description, usage, build, and test instructions.
+
+## Milestone 4: Release Process & Automation
+
+**Goal:** Define and implement an automated release process using Conventional Commits and GitHub Actions to streamline versioning, changelog generation, and GitHub Release creation.
+
+- [x] **Task 4.2: Define and Implement Release Process using Conventional Commits** (2025-05-20)
+  - [x] Research and select appropriate tooling for semantic versioning and changelog generation based on Conventional Commits (e.g., `release-please-action`).
+  - [x] Create/update GitHub Actions workflow to:
+    - Trigger on pushes/merges to the main branch.
+    - Automatically determine the next version.
+    - Generate a changelog.
+    - Create a Git tag.
+    - Create a GitHub Release with the changelog and release assets.
+  - [x] Configure the workflow to build release binaries for common platforms (Linux, macOS, Windows).
+  - [x] Document the release process and how to trigger it.

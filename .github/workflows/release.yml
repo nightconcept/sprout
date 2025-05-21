@@ -1,0 +1,108 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Release Please
+        id: release
+        uses: google-github-actions/release-please-action@v4
+        with:
+          release-type: rust
+          package-name: sprout
+          # Optional: Define a custom token if needed, though default GITHUB_TOKEN often works.
+          # token: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: If you want release-please to create a PR instead of releasing directly
+          # command: release-pr
+          # Optional: If you want to include a manifest file (e.g. for cargo-dist)
+          # manifest-file: .manifest.json
+
+  # This job runs after a release has been created by release-please
+  # (either directly or after a release PR is merged).
+  # It builds the binaries and uploads them as release assets.
+  build-and-upload-assets:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            asset_name_suffix: linux-x86_64
+            binary_name: sprout
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            asset_name_suffix: macos-x86_64
+            binary_name: sprout
+          - os: macos-latest # For Apple Silicon
+            target: aarch64-apple-darwin
+            asset_name_suffix: macos-aarch64
+            binary_name: sprout
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            asset_name_suffix: windows-x86_64
+            binary_name: sprout.exe
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Checkout the specific tag created by release-please
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Build binary
+        run: cargo build --release --target ${{ matrix.target }}
+        env:
+          CARGO_TERM_COLOR: always
+
+      - name: Prepare asset name
+        id: asset_details
+        run: |
+          VERSION_TAG="${{ needs.release-please.outputs.tag_name }}"
+          # Remove 'v' prefix if present (e.g., v0.1.0 -> 0.1.0)
+          VERSION="${VERSION_TAG#v}"
+          ASSET_NAME="sprout-v${VERSION}-${{ matrix.asset_name_suffix }}"
+          echo "ASSET_NAME=${ASSET_NAME}" >> $GITHUB_OUTPUT
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+
+      - name: Upload Release Asset (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release-please.outputs.upload_url }}
+          asset_path: ./target/${{ matrix.target }}/release/${{ matrix.binary_name }}
+          asset_name: ${{ steps.asset_details.outputs.ASSET_NAME }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release-please.outputs.upload_url }}
+          asset_path: ./target/${{ matrix.target }}/release/${{ matrix.binary_name }}
+          asset_name: ${{ steps.asset_details.outputs.ASSET_NAME }}.exe # Ensure .exe for Windows asset name if binary_name doesn't include it
+          asset_content_type: application/octet-stream

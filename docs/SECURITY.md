@@ -32,7 +32,7 @@ This policy applies to the latest stable release of Codesprout. If you are using
 The following are generally considered out of scope for our vulnerability disclosure program:
 
 * Denial of service attacks that require significant volumetric resources.
-*Social engineering or phishing attacks.
-*Vulnerabilities in third-party dependencies (please report those to the respective projects, though we appreciate a heads-up if it impacts Codesprout).
+* Social engineering or phishing attacks.
+* Vulnerabilities in third-party dependencies (please report those to the respective projects, though we appreciate a heads-up if it impacts Codesprout).
 
 Thank you for helping keep Codesprout secure. Your efforts in responsible disclosure are highly valued.
