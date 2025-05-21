@@ -152,7 +152,13 @@
 (Items from the PRD's "Future Considerations" that are out of scope for this initial prototype but good to keep in mind for future development)
 
 - [ ] Implement Reverse Operation ("Bundling" a directory into a `digest.txt` style file).
-- [ ] Add file overwrite protection options (`--force`, skip, prompt).
+- [x] **Implement `--force` flag for overwriting files** (2025-05-21) - Add a `--force` CLI flag to allow `sprout` to overwrite existing files in the output directory without prompting.
+  - [x] Update CLI argument parsing in `src/main.rs` to include the `--force` flag.
+  - [x] Modify `src/bundler.rs` to bypass collision checks and overwrite files if `--force` is active.
+  - [x] Add/update unit tests for `bundler.rs` to cover overwrite logic.
+  - [x] Add/update integration tests to verify `--force` flag behavior.
+  - [x] Update `README.md` to document the new `--force` flag.
+- [ ] Add other file overwrite protection options (skip, prompt).
 - [ ] Introduce a configuration file for `sprout` (e.g., custom delimiters, default output dir).
 - [ ] Add more comprehensive test cases for file system edge cases (permissions, symlinks, etc.).
 - [ ] Refine and add more detailed verbose logging options (e.g., using `log` and `env_logger` crates).
@@ -160,6 +166,12 @@
 - [ ] Performance benchmarking and optimization for very large bundle files or a high number of files.
 - [x] **Task 4.1: Create Project README** (2025-05-20) - Create a cool README.md with emojis, project description, usage, build, and test instructions.
 
+- [ ] **Task 3.4: Setup and Document Code Coverage** (2025-05-21)
+  - [ ] Choose and document a code coverage tool (e.g., `cargo-tarpaulin`).
+  - [ ] Add installation instructions for the chosen tool.
+  - [ ] Document the command(s) to generate coverage reports (e.g., HTML, LCOV).
+  - [ ] Integrate coverage check into CI if feasible/desired.
+  - [ ] Verification: Coverage reports can be successfully generated and provide meaningful insights.
 ## Milestone 4: Release Process & Automation
 
 **Goal:** Define and implement an automated release process using Conventional Commits and GitHub Actions to streamline versioning, changelog generation, and GitHub Release creation.

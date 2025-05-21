@@ -17,18 +17,36 @@ use std::{
 ///   - Writes the `entry.content` to the file path using `std::fs::write`.
 ///
 /// Handles potential I/O errors during directory/file creation gracefully, returning an `anyhow::Error`.
-pub fn create_files_from_bundle(entries: &[ParsedEntry], output_dir: &Path) -> Result<()> {
+/// If `force` is true, existing files will be overwritten.
+pub fn create_files_from_bundle(
+    entries: &[ParsedEntry],
+    output_dir: &Path,
+    _force: bool, // Indicate unused variable, logic is handled by skipping collision check
+) -> Result<()> {
     for entry in entries {
         let full_target_path = output_dir.join(&entry.path);
 
+        // If forcing, we don't care if the file exists, but we still need to ensure parent dirs are there.
+        // If not forcing, collision check should have already happened.
         if let Some(parent_path) = full_target_path.parent() {
             if !parent_path.exists() {
                 fs::create_dir_all(parent_path).with_context(|| {
                     format!("Failed to create parent directory: {:?}", parent_path)
                 })?;
+            } else if parent_path.is_file() {
+                // This case should ideally be caught by check_for_collisions if not forcing.
+                // If forcing, and a parent path component is a file, fs::write will fail later.
+                // This is a safeguard or clarity, fs::write would fail anyway.
+                return Err(anyhow::anyhow!(
+                    "Cannot create file {:?}, its parent {:?} is an existing file.",
+                    full_target_path,
+                    parent_path
+                ));
             }
         }
 
+        // fs::write will overwrite if the path exists and is a file.
+        // If path is a directory, fs::write will fail, which is correct.
         fs::write(&full_target_path, &entry.content)
             .with_context(|| format!("Failed to write file: {:?}", full_target_path))?;
     }
@@ -202,7 +220,7 @@ mod tests {
         let output_dir = dir.path();
         let entries = vec![create_parsed_entry("file1.txt", "Hello World")];
 
-        create_files_from_bundle(&entries, output_dir)?;
+        create_files_from_bundle(&entries, output_dir, false)?;
 
         let file_path = output_dir.join("file1.txt");
         assert!(file_path.exists());
@@ -219,7 +237,7 @@ mod tests {
             create_parsed_entry("file2.txt", "Content 2"),
         ];
 
-        create_files_from_bundle(&entries, output_dir)?;
+        create_files_from_bundle(&entries, output_dir, false)?;
 
         let file_path1 = output_dir.join("file1.txt");
         assert!(file_path1.exists());
@@ -241,7 +259,7 @@ mod tests {
             create_parsed_entry("file3.txt", "Root Content 3"),
         ];
 
-        create_files_from_bundle(&entries, output_dir)?;
+        create_files_from_bundle(&entries, output_dir, false)?;
 
         let path1 = output_dir.join("dir1/file1.txt");
         assert!(path1.exists());
@@ -265,7 +283,7 @@ mod tests {
         let output_dir = dir.path();
         let entries = vec![create_parsed_entry("empty.txt", "")];
 
-        create_files_from_bundle(&entries, output_dir)?;
+        create_files_from_bundle(&entries, output_dir, false)?;
 
         let file_path = output_dir.join("empty.txt");
         assert!(file_path.exists());
@@ -283,7 +301,7 @@ mod tests {
             create_parsed_entry("config/settings.toml", "key = \"value\"\nnumber = 123"),
         ];
 
-        create_files_from_bundle(&entries, output_dir)?;
+        create_files_from_bundle(&entries, output_dir, false)?;
 
         let path_rs = output_dir.join("src/main.rs");
         assert!(path_rs.exists());
@@ -308,6 +326,58 @@ mod tests {
             "key = \"value\"\nnumber = 123"
         );
         assert!(output_dir.join("config").is_dir());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_create_files_overwrite_with_force() -> Result<()> {
+        let dir = tempdir()?;
+        let output_dir = dir.path();
+        let file_path = output_dir.join("file1.txt");
+
+        // Create an initial file
+        fs::write(&file_path, "Initial Content")?;
+        assert_eq!(fs::read_to_string(&file_path)?, "Initial Content");
+
+        let entries = vec![create_parsed_entry("file1.txt", "Overwritten Content")];
+
+        // Create files with force=true
+        create_files_from_bundle(&entries, output_dir, true)?;
+
+        assert!(file_path.exists());
+        assert_eq!(fs::read_to_string(&file_path)?, "Overwritten Content");
+        Ok(())
+    }
+
+    #[test]
+    fn test_create_files_fail_on_parent_is_file_even_with_force() -> Result<()> {
+        let dir = tempdir()?;
+        let output_dir = dir.path();
+        let file_acting_as_parent_path = output_dir.join("parent_file");
+
+        // Create a file where a directory is expected
+        fs::write(&file_acting_as_parent_path, "I am a file, not a directory.")?;
+
+        let entries = vec![create_parsed_entry(
+            "parent_file/child.txt",
+            "This should not be written.",
+        )];
+
+        // Attempt to create files with force=true
+        let result = create_files_from_bundle(&entries, output_dir, true);
+
+        assert!(result.is_err());
+        let error_message = result.err().unwrap().to_string();
+        assert!(error_message.contains("its parent"));
+        assert!(error_message.contains("is an existing file"));
+
+        // Ensure the original "parent_file" is untouched and no "child.txt" was created
+        assert_eq!(
+            fs::read_to_string(&file_acting_as_parent_path)?,
+            "I am a file, not a directory."
+        );
+        assert!(!output_dir.join("parent_file/child.txt").exists());
 
         Ok(())
     }

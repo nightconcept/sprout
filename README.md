@@ -58,6 +58,8 @@ sprout --input <BUNDLE_FILE_PATH> --output <OUTPUT_DIRECTORY_PATH>
 *   `BUNDLE_FILE_PATH`: (Positional or via `-i`/`--input`) Path to the bundle file. This is **required**.
 *   `OUTPUT_DIRECTORY_PATH`: (Positional or via `-o`/`--output`) Path to the directory where files will be sprouted.
     *   Defaults to the current working directory if not specified.
+*   `-f`, `--force`: (Optional) If specified, `sprout` will overwrite any existing files in the output directory that conflict with files from the bundle. Without this flag, `sprout` will abort if any collisions are detected.
+
 target/tarpaulin
 
 ## 🔮 Future Ideas
@@ -65,7 +67,7 @@ target/tarpaulin
 While the current prototype is focused and functional, here are some ideas for future enhancements:
 
 *   **Reverse Operation ("Bundling"):** Create a bundle file from an existing directory.
-*   **Overwrite Options:** Add flags like `--force` to allow overwriting files.
+*   **Overwrite Options:** Add flags like `--skip` or interactive prompts for overwriting files (complementary to the implemented `--force` flag).
 
 ## 📜 License
 

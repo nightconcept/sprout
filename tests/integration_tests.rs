@@ -275,3 +275,104 @@ fn test_bundle_with_empty_file_content() -> Result<(), Box<dyn std::error::Error
 
     Ok(())
 }
+
+#[test]
+fn test_force_overwrite_existing_file() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: overwrite_me.txt\n================================================\nNew Content\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+    let target_file_path = output_dir.path().join("overwrite_me.txt");
+
+    // Create the file initially
+    fs::write(&target_file_path, "Old Content")?;
+    assert_eq!(fs::read_to_string(&target_file_path)?, "Old Content");
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path())
+        .arg(output_dir.path())
+        .arg("--force");
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(format!(
+            "Successfully sprouted 1 file(s) from '{}' to '{}'. (files overwritten if necessary)",
+            bundle_file.path().display(),
+            output_dir.path().display()
+        )));
+
+    assert!(target_file_path.exists());
+    assert_eq!(fs::read_to_string(target_file_path)?, "New Content\n");
+
+    Ok(())
+}
+
+#[test]
+fn test_force_overwrite_existing_file_short_flag() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: overwrite_me_short.txt\n================================================\nNew Content Short\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+    let target_file_path = output_dir.path().join("overwrite_me_short.txt");
+
+    // Create the file initially
+    fs::write(&target_file_path, "Old Content Short")?;
+    assert_eq!(fs::read_to_string(&target_file_path)?, "Old Content Short");
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path()).arg(output_dir.path()).arg("-f"); // Short flag for force
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(format!(
+            "Successfully sprouted 1 file(s) from '{}' to '{}'. (files overwritten if necessary)",
+            bundle_file.path().display(),
+            output_dir.path().display()
+        )));
+
+    assert!(target_file_path.exists());
+    assert_eq!(fs::read_to_string(target_file_path)?, "New Content Short\n");
+
+    Ok(())
+}
+
+#[test]
+fn test_force_still_fails_if_parent_is_file() -> Result<(), Box<dyn std::error::Error>> {
+    let bundle_content = "================================================\nFile: existing_file_as_parent/new_child.txt\n================================================\nShould not be created\n";
+    let bundle_file = create_temp_bundle_file(bundle_content);
+    let output_dir = TempDir::new()?;
+
+    // Create a file that would be a parent directory
+    let conflicting_parent_path = output_dir.path().join("existing_file_as_parent");
+    fs::write(&conflicting_parent_path, "I am a file.")?;
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.arg(bundle_file.path())
+        .arg(output_dir.path())
+        .arg("--force");
+
+    cmd.assert().failure().stderr(
+        predicate::str::contains("Failed to create parent directory")
+            .or(
+                // Error from create_dir_all
+                predicate::str::contains("its parent")
+                    .and(predicate::str::contains("is an existing file")), // Error from bundler.rs explicit check
+            )
+            .or(
+                predicate::str::contains("Failed to write file"), // Error from fs::write if parent is a file
+            ),
+    );
+
+    // Ensure original file is untouched and no new file/directory was created under/as it
+    assert_eq!(
+        fs::read_to_string(&conflicting_parent_path)?,
+        "I am a file."
+    );
+    assert!(
+        !output_dir
+            .path()
+            .join("existing_file_as_parent/new_child.txt")
+            .exists()
+    );
+    assert!(conflicting_parent_path.is_file());
+
+    Ok(())
+}

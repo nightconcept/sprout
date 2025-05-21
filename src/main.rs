@@ -25,6 +25,10 @@ struct CliArgs {
     /// Specify output directory path via flag (overrides positional OUTPUT_DIRECTORY_PATH).
     #[arg(short, long, value_name = "PATH")]
     output: Option<PathBuf>,
+
+    /// Force overwrite of existing files.
+    #[arg(short, long, default_value_t = false)]
+    force: bool,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -52,15 +56,22 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    bundler::check_for_collisions(&parsed_data, &final_output_path)?;
+    if !args.force {
+        bundler::check_for_collisions(&parsed_data, &final_output_path)?;
+    }
 
-    bundler::create_files_from_bundle(&parsed_data, &final_output_path)?;
+    bundler::create_files_from_bundle(&parsed_data, &final_output_path, args.force)?;
 
     println!(
-        "Successfully sprouted {} file(s) from '{}' to '{}'.",
+        "Successfully sprouted {} file(s) from '{}' to '{}'.{}",
         parsed_data.len(),
         bundle_path.display(),
-        final_output_path.display()
+        final_output_path.display(),
+        if args.force {
+            " (files overwritten if necessary)"
+        } else {
+            ""
+        }
     );
     Ok(())
 }
