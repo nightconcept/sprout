@@ -15,3 +15,7 @@ repos:
         types: [rust]
         pass_filenames: false
         verbose: true
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.16.3
+    hooks:
+      - id: gitleaks

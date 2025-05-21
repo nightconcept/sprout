@@ -33,7 +33,7 @@ jobs:
           fetch-depth: 2 # Or 0 for full history if needed by any tools
 
       - name: Set up Rust toolchain
-        uses: dtolnay/rust-toolchain@stable # Using dtolnay's action, very common
+        uses: dtolnay/rust-toolchain@4305c38b25d97ef35a8ad1f985ccf2d2242004f2 # stable
         with:
           toolchain: ${{ matrix.rust-version }}
           components: clippy, rustfmt # Install clippy and rustfmt along with the toolchain
