@@ -188,9 +188,10 @@ impl fmt::Display for BundleParseError {
 
 impl std::error::Error for BundleParseError {}
 
-/// Parses a bundle file, extracting file paths and their content, and validating the format.
+/// Parses and validates a bundle file, extracting file entries.
 ///
-/// Collects all format errors found in the bundle.
+/// Returns a list of `ParsedEntry` or a `BundleParseError` if validation fails,
+/// collecting all format errors encountered.
 pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
     let bundle_content = fs::read_to_string(bundle_path)
         .with_context(|| format!("Failed to read bundle file: {:?}", bundle_path))?;

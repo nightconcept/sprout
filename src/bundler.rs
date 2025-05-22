@@ -8,16 +8,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Creates directories and files based on the parsed bundle entries.
+/// Creates directories and files from parsed bundle entries.
 ///
-/// This function is called only if bundle parsing and collision checks pass.
-/// For each `ParsedEntry`:
-///   - Resolves the full absolute path for the new file.
-///   - Ensures its parent directory exists using `std::fs::create_dir_all(parent_path)`.
-///   - Writes the `entry.content` to the file path using `std::fs::write`.
-///
-/// Handles potential I/O errors during directory/file creation gracefully, returning an `anyhow::Error`.
-/// If `force` is true, existing files will be overwritten.
+/// Assumes that bundle parsing and collision checks (if `force` is false) have already passed.
+/// Parent directories are created as needed. If `force` is true, `fs::write` will
+/// overwrite existing files. I/O errors are propagated.
 pub fn create_files_from_bundle(
     entries: &[ParsedEntry],
     output_dir: &Path,
@@ -45,20 +40,17 @@ pub fn create_files_from_bundle(
             }
         }
 
-        // fs::write will overwrite if the path exists and is a file.
-        // If path is a directory, fs::write will fail, which is correct.
         fs::write(&full_target_path, &entry.content)
             .with_context(|| format!("Failed to write file: {:?}", full_target_path))?;
     }
     Ok(())
 }
 
-/// Checks for path collisions in the output directory.
+/// Checks for path collisions in the output directory before any files are written.
 ///
-/// For each `ParsedEntry`, it constructs the full target path by joining
-/// `output_dir` and `entry.path`. It then checks if this full target path
-/// already exists. If any collisions are detected, it returns an `anyhow::Error`
-/// detailing all collisions.
+/// Verifies that no target path from `entries` already exists or would conflict
+/// with directory creation (e.g., a file exists where a directory needs to be created).
+/// Returns an error detailing all collisions if any are found.
 pub fn check_for_collisions(entries: &[ParsedEntry], output_dir: &Path) -> Result<()> {
     let mut collisions = Vec::new();
 
@@ -344,13 +336,11 @@ mod tests {
         let output_dir = dir.path();
         let file_path = output_dir.join("file1.txt");
 
-        // Create an initial file
         fs::write(&file_path, "Initial Content")?;
         assert_eq!(fs::read_to_string(&file_path)?, "Initial Content");
 
         let entries = vec![create_parsed_entry("file1.txt", "Overwritten Content")];
 
-        // Create files with force=true
         create_files_from_bundle(&entries, output_dir, true)?;
 
         assert!(file_path.exists());
@@ -364,7 +354,6 @@ mod tests {
         let output_dir = dir.path();
         let file_acting_as_parent_path = output_dir.join("parent_file");
 
-        // Create a file where a directory is expected
         fs::write(&file_acting_as_parent_path, "I am a file, not a directory.")?;
 
         let entries = vec![create_parsed_entry(
@@ -372,7 +361,6 @@ mod tests {
             "This should not be written.",
         )];
 
-        // Attempt to create files with force=true
         let result = create_files_from_bundle(&entries, output_dir, true);
 
         assert!(result.is_err());
@@ -395,7 +383,6 @@ mod tests {
         let dir = tempdir()?;
         let output_dir = dir.path();
 
-        // Create a file that will act as an invalid ancestor for a directory to be created
         let ancestor_file_path = output_dir.join("ancestor_is_a_file");
         fs::write(
             &ancestor_file_path,
