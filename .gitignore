@@ -2,3 +2,4 @@
 .vscode/settings.json
 game/log.txt
 target/
+tarpaulin-report.html

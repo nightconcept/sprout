@@ -22,7 +22,7 @@
 
 1.  **Clone the repository (if you haven't already):**
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/nightconcept/sprout.git
     cd sprout
     ```
 2.  **Build for debugging:**
