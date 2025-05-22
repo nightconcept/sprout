@@ -21,18 +21,18 @@
 ### Building `sprout`
 
 1.  **Clone the repository (if you haven't already):**
-    ```bash
+    ```sh
     git clone https://github.com/nightconcept/sprout.git
     cd sprout
     ```
 2.  **Build for debugging:**
-    ```bash
+    ```sh
     cargo build
     ```
     The executable will be located at `target/debug/sprout`.
 
 3.  **Build for release (optimized):**
-    ```bash
+    ```sh
     cargo build --release
     ```
     The executable will be located at `target/release/sprout`.
@@ -43,13 +43,13 @@ The `sprout` CLI tool takes a bundle file as input and creates the files and dir
 
 ### Command Syntax:
 
-```bash
-sprout [BUNDLE_FILE_PATH] [OUTPUT_DIRECTORY_PATH]
+```sh
+sprout [OPTIONS] [BUNDLE_FILE_PATH] [OUTPUT_DIRECTORY_PATH]
 ```
 
 Or using flags:
 
-```bash
+```sh
 sprout --input <BUNDLE_FILE_PATH> --output <OUTPUT_DIRECTORY_PATH>
 ```
 
@@ -59,15 +59,6 @@ sprout --input <BUNDLE_FILE_PATH> --output <OUTPUT_DIRECTORY_PATH>
 *   `OUTPUT_DIRECTORY_PATH`: (Positional or via `-o`/`--output`) Path to the directory where files will be sprouted.
     *   Defaults to the current working directory if not specified.
 *   `-f`, `--force`: (Optional) If specified, `sprout` will overwrite any existing files in the output directory that conflict with files from the bundle. Without this flag, `sprout` will abort if any collisions are detected.
-
-target/tarpaulin
-
-## 🔮 Future Ideas
-
-While the current prototype is focused and functional, here are some ideas for future enhancements:
-
-*   **Reverse Operation ("Bundling"):** Create a bundle file from an existing directory.
-*   **Overwrite Options:** Add flags like `--skip` or interactive prompts for overwriting files (complementary to the implemented `--force` flag).
 
 ## 📜 License
 
