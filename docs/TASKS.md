@@ -67,6 +67,10 @@
     - [x] Implement basic stubs for these functions in their respective (future) modules (`parser.rs`, `bundler.rs`).
     - [x] Ensure `main` propagates errors from these calls using `?`.
     - [x] Verification: The `sprout` command runs, prints placeholder messages for each stubbed step based on parsed arguments, and exits gracefully (or with a placeholder error from a stub).
+- [x] **Task 1.4: Display Help on No Arguments** (2025-05-22)
+    - [x] Modified `src/main.rs` to use `clap`'s `arg_required_else_help = true` attribute.
+    - [x] This ensures that `sprout` (with no input arguments) displays the standard `clap` help message instead of a custom error.
+    - [x] Verification: Running `sprout` with no arguments prints the help message.
 
 ## Milestone 2: Bundle File Parsing and Validation
 
@@ -165,6 +169,10 @@
 - [ ] Research and implement packaging/distribution methods for the Rust binary (e.g., `cargo-dist`, GitHub Releases assets, AUR, Homebrew).
 - [ ] Performance benchmarking and optimization for very large bundle files or a high number of files.
 - [x] **Task 4.1: Create Project README** (2025-05-20) - Create a cool README.md with emojis, project description, usage, build, and test instructions.
+- [x] **Create PowerShell install script** (2025-05-22) - Create `scripts/install.ps1` to build a release version and copy `sprout.exe` to `$env:USERPROFILE\.local\bin`.
+  - [x] Script builds `sprout` in release mode (`cargo build --release`).
+  - [x] Script copies the built `sprout.exe` to `$env:USERPROFILE\.local\bin`.
+  - [x] Script includes basic error handling and user feedback messages.
 
 - [ ] **Task 3.4: Setup and Document Code Coverage** (2025-05-21)
   - [ ] Choose and document a code coverage tool (e.g., `cargo-tarpaulin`).

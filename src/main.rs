@@ -6,7 +6,7 @@ mod parser;
 
 /// sprout - A CLI tool to sprout files from a bundle.
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None, infer_long_args = true)]
+#[command(author, version, about, long_about = None, infer_long_args = true, arg_required_else_help = true)]
 struct CliArgs {
     /// Positional arguments: <BUNDLE_FILE_PATH> [OUTPUT_DIRECTORY_PATH]
     /// BUNDLE_FILE_PATH is required if -i/--input is not used.
