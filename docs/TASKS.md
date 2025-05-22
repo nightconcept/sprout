@@ -207,7 +207,7 @@
 - [x] **Task 5.2: Improve test coverage for `src/main.rs`** (2025-05-21)
   - [x] Analyze `tarpaulin-report.html` for uncovered lines in `src/main.rs`.
   - [x] Write new tests (likely integration tests in `tests/integration_tests.rs` as `main.rs` handles CLI logic) to cover these lines/scenarios.
-  - [x] Target lines: 44, 51, 76.
+  - [x] Target lines: 44, 51, 76. (Lines 71-74 are now also covered by `test_single_dot_argument_as_bundle_path`)
   - [x] Aim for 100% coverage for `src/main.rs`.
 - [x] **Task 5.3: Improve parser.rs coverage for EOF scenarios** (YYYY-MM-DD) - Added specific test for `PrematureEOFBeforeContentSeparator` and cleaned up duplicated tests.
 - [x] **Task 5.4: Add test coverage for BundleValidationError Display formatting** (2025-05-21)

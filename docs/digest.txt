@@ -36,30 +36,30 @@ File: README.md
 ================================================
 # sprout 🌱
 
-![License](https://img.shields.io/github/license/nightconcept/codesprout)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/nightconcept/codesprout/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/nightconcept/codesprout/badge.svg?branch=main)](https://coveralls.io/github/nightconcept/codesprout?branch=main)
-![GitHub last commit](https://img.shields.io/github/last-commit/nightconcept/codesprout)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nightconcept/codesprout/badge)](https://scorecard.dev/viewer/?uri=github.com/nightconcept/codesprout)
+![License](https://img.shields.io/github/license/nightconcept/sprout)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/nightconcept/sprout/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/nightconcept/sprout/badge.svg?branch=main)](https://coveralls.io/github/nightconcept/sprout?branch=main)
+![GitHub last commit](https://img.shields.io/github/last-commit/nightconcept/sprout)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/nightconcept/sprout/badge)](https://scorecard.dev/viewer/?uri=github.com/nightconcept/sprout)
 
 ## 🌟 Overview
 
-`codesprout` is a command-line interface that takes a bundle created by [gitingest](https://gitingest.com/) and sprouts it in the target directory.
+`sprout` is a command-line interface that takes a bundle created by [gitingest](https://gitingest.com/) and sprouts it in the target directory.
 
-`codesprout` is written in Rust for fun and learning.
+`sprout` is written in Rust for fun and learning.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-*   **Rust:** Ensure you have Rust installed. You can get it from [rust-lang.org](https://www.rust-lang.org/). `codesprout` is built with the latest stable Rust version.
+*   **Rust:** Ensure you have Rust installed. You can get it from [rust-lang.org](https://www.rust-lang.org/). `sprout` is built with the latest stable Rust version.
 
-### Building `codesprout`
+### Building `sprout`
 
 1.  **Clone the repository (if you haven't already):**
     ```bash
     git clone <repository-url>
-    cd codesprout
+    cd sprout
     ```
 2.  **Build for debugging:**
     ```bash
@@ -902,20 +902,20 @@ A standard Rust binary (application) project structure will be used, generated i
 
 ```
 /codesprout_project_root
-  â”œâ”€â”€ .git/
-  â”œâ”€â”€ .github/              # For GitHub Actions, issue templates, etc.
-  â”œâ”€â”€ docs/
-  â”‚   â”œâ”€â”€ PRD.md            # This document
-  â”‚   â””â”€â”€ TASKS.md          # Task list
-  â”œâ”€â”€ src/
-  â”‚   â”œâ”€â”€ main.rs           # CLI entry point, argument parsing (clap), main logic flow
-  â”‚   â”œâ”€â”€ parser.rs         # Module for parsing the bundle file
-  â”‚   â”œâ”€â”€ bundler.rs        # Module for file/directory creation and output logic (renamed from sprouter for clarity)
-  â”‚   â””â”€â”€ error.rs          # (Optional) Module for custom error types if not solely relying on anyhow
-  â”œâ”€â”€ Cargo.toml            # Rust project manifest, dependencies
-  â”œâ”€â”€ Cargo.lock            # Generated lockfile
-  â”œâ”€â”€ README.md             # Project README
-  â””â”€â”€ target/               # Build artifacts (ignored by git)
+  ├── .git/
+  ├── .github/              # For GitHub Actions, issue templates, etc.
+  ├── docs/
+  │   ├── PRD.md            # This document
+  │   └── TASKS.md          # Task list
+  ├── src/
+  │   ├── main.rs           # CLI entry point, argument parsing (clap), main logic flow
+  │   ├── parser.rs         # Module for parsing the bundle file
+  │   ├── bundler.rs        # Module for file/directory creation and output logic (renamed from sprouter for clarity)
+  │   └── error.rs          # (Optional) Module for custom error types if not solely relying on anyhow
+  ├── Cargo.toml            # Rust project manifest, dependencies
+  ├── Cargo.lock            # Generated lockfile
+  ├── README.md             # Project README
+  └── target/               # Build artifacts (ignored by git)
 ```
 
 - `src/`: Contains all Rust source code.
@@ -995,7 +995,7 @@ This project uses `release-please-action` to automate releases. When commits adh
 4.  **Create a Git tag** for the new version (e.g., `v0.2.0`).
 5.  **Publish a GitHub Release** with the generated changelog and compiled binaries for Linux, macOS (x86_64 and aarch64), and Windows.
 
-This process is documented in the main [README.md](../README.md#ë¦´ë¦¬ìŠ¤-í”„ë¡œì„¸ìŠ¤-release-process-ðŸ“¦).
+This process is documented in the main [README.md](../README.md#릴리스-프로세스-release-process-📦).
 
 ## Creating Pre-Releases (e.g., Alpha, Beta)
 
@@ -1314,7 +1314,7 @@ File: docs/TASKS.md
 - [x] **Task 5.2: Improve test coverage for `src/main.rs`** (2025-05-21)
   - [x] Analyze `tarpaulin-report.html` for uncovered lines in `src/main.rs`.
   - [x] Write new tests (likely integration tests in `tests/integration_tests.rs` as `main.rs` handles CLI logic) to cover these lines/scenarios.
-  - [x] Target lines: 44, 51, 76.
+  - [x] Target lines: 44, 51, 76. (Lines 71-74 are now also covered by `test_single_dot_argument_as_bundle_path`)
   - [x] Aim for 100% coverage for `src/main.rs`.
 - [x] **Task 5.3: Improve parser.rs coverage for EOF scenarios** (YYYY-MM-DD) - Added specific test for `PrematureEOFBeforeContentSeparator` and cleaned up duplicated tests.
 - [x] **Task 5.4: Add test coverage for BundleValidationError Display formatting** (2025-05-21)
@@ -3339,6 +3339,7 @@ use std::io::Write;
 use std::process::Command;
 use tempfile::NamedTempFile;
 use tempfile::TempDir;
+use tempfile::tempdir;
 
 fn create_temp_bundle_file(content: &str) -> NamedTempFile {
     let mut file = NamedTempFile::new().expect("Failed to create temp bundle file");
@@ -3872,6 +3873,25 @@ fn test_input_flag_with_force_flag_message() -> Result<(), Box<dyn std::error::E
         fs::read_to_string(existing_file_path)?,
         "Force flag message test\n"
     );
+
+    Ok(())
+}
+
+#[test]
+fn test_single_dot_argument_as_bundle_path() -> Result<(), Box<dyn std::error::Error>> {
+    let temp_dir = tempdir()?;
+    // We don't create a file named ".". We use the directory itself.
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.current_dir(temp_dir.path()); // Run `sprout` from within the temp_dir
+    cmd.arg("."); // Use "." (the current directory) as the bundle path
+
+    cmd.assert()
+        .failure() // Expect the command to fail
+        .stderr(
+            predicate::str::contains("Failed to read bundle file")
+                .and(predicate::str::contains("Is a directory")),
+        ); // Check for the specific error
 
     Ok(())
 }

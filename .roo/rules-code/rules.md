@@ -4,7 +4,7 @@
 
 ## 1. Preparation
 
-* **Project Context (Session Start):** ALWAYS review key project docs: `docs/PRD.md` (architecture, goals, tech stack, versions, structure, style guide), `docs/digest.txt` (current state summary), `docs/TASKS.md` (assignments).
+* **Project Context (Session Start):** ALWAYS review key project docs: `docs/PRD.md` (architecture, goals, tech stack, versions, structure, style guide), `docs/TASKS.md` (assignments).
 * **Task Prep (Before Work):**
     * ALWAYS consult `docs/TASKS.md` for your assignment. If missing, add it (concise description, `YYYY-MM-DD`).
     * ALWAYS review relevant existing code *before* suggesting changes.

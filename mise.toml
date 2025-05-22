@@ -7,6 +7,10 @@ rust = "1.87"
 description = "Run build."
 run = ["cargo build"]
 
+[tasks.coverage]
+description = "Run coverage."
+run = ["cargo tarpaulin --out Html --all-targets"]
+
 [tasks.format]
 description = "Run format."
 run = ["cargo fmt --all"]

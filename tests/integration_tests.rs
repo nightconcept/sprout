@@ -5,6 +5,7 @@ use std::io::Write;
 use std::process::Command;
 use tempfile::NamedTempFile;
 use tempfile::TempDir;
+use tempfile::tempdir;
 
 fn create_temp_bundle_file(content: &str) -> NamedTempFile {
     let mut file = NamedTempFile::new().expect("Failed to create temp bundle file");
@@ -538,6 +539,25 @@ fn test_input_flag_with_force_flag_message() -> Result<(), Box<dyn std::error::E
         fs::read_to_string(existing_file_path)?,
         "Force flag message test\n"
     );
+
+    Ok(())
+}
+
+#[test]
+fn test_single_dot_argument_as_bundle_path() -> Result<(), Box<dyn std::error::Error>> {
+    let temp_dir = tempdir()?;
+    // We don't create a file named ".". We use the directory itself.
+
+    let mut cmd = Command::cargo_bin("sprout")?;
+    cmd.current_dir(temp_dir.path()); // Run `sprout` from within the temp_dir
+    cmd.arg("."); // Use "." (the current directory) as the bundle path
+
+    cmd.assert()
+        .failure() // Expect the command to fail
+        .stderr(
+            predicate::str::contains("Failed to read bundle file")
+                .and(predicate::str::contains("Is a directory")),
+        ); // Check for the specific error
 
     Ok(())
 }
