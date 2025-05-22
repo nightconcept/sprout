@@ -152,6 +152,10 @@
     - [x] Verification: The `sprout` command works end-to-end for valid scenarios and fails gracefully with correct, comprehensive error messages for all defined error conditions. Code coverage for core logic (parsing, bundling) is reasonable.
 
 ## Bug Fixes
+- [x] **Task TEST-1: Fix `test_missing_input_bundle` stderr assertion** (2025-05-22)
+  - Description: The `test_missing_input_bundle` integration test fails due to an overly specific stderr assertion (`Usage: sprout.exe`) that doesn't account for non-Windows environments.
+  - File: `tests/integration_tests.rs`
+  - Action: Modify the assertion to be platform-agnostic by checking for `Usage: sprout` instead.
 
 - [x] **Task BUG-1: Fix parser panic on UTF-8 char boundary** (2025-05-22)
   - Description: The parser panics with "byte index X is not a char boundary" when processing input files containing multi-byte UTF-8 characters near split points.

@@ -252,7 +252,7 @@ fn test_input_via_i_flag() -> Result<(), Box<dyn std::error::Error>> {
 fn test_missing_input_bundle() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("sprout")?;
     cmd.assert().failure().stderr(
-        predicate::str::contains("Usage: sprout.exe") // Expect clap's help message
+        predicate::str::contains("Usage: sprout") // Expect clap's help message, platform-agnostic
             .and(predicate::str::contains("Arguments:"))
             .and(predicate::str::contains("Options:")),
     );
