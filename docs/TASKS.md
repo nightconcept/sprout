@@ -204,13 +204,25 @@
   - [x] Write new unit tests or modify existing ones in `src/bundler.rs` (tests module) to cover these lines.
   - [x] Target lines: 34, 74.
   - [x] Aim for 100% coverage for `src/bundler.rs`.
-- [ ] **Task 5.2: Improve test coverage for `src/main.rs`** (2025-05-21)
-  - [ ] Analyze `tarpaulin-report.html` for uncovered lines in `src/main.rs`.
-  - [ ] Write new tests (likely integration tests in `tests/integration_tests.rs` as `main.rs` handles CLI logic) to cover these lines/scenarios.
-  - [ ] Target lines: 44, 51, 76.
-  - [ ] Aim for 100% coverage for `src/main.rs`.
-- [ ] **Task 5.3: Improve test coverage for `src/parser.rs`** (2025-05-21)
-  - [ ] Analyze `tarpaulin-report.html` for the many uncovered lines in `src/parser.rs`.
-  - [ ] Write new unit tests or modify existing ones in `src/parser.rs` (tests module) to cover these lines.
-  - [ ] Prioritize covering error handling paths and complex logic branches.
-  - [ ] Aim for significantly improved coverage, targeting 100% for `src/parser.rs`.
+- [x] **Task 5.2: Improve test coverage for `src/main.rs`** (2025-05-21)
+  - [x] Analyze `tarpaulin-report.html` for uncovered lines in `src/main.rs`.
+  - [x] Write new tests (likely integration tests in `tests/integration_tests.rs` as `main.rs` handles CLI logic) to cover these lines/scenarios.
+  - [x] Target lines: 44, 51, 76.
+  - [x] Aim for 100% coverage for `src/main.rs`.
+- [x] **Task 5.3: Improve parser.rs coverage for EOF scenarios** (YYYY-MM-DD) - Added specific test for `PrematureEOFBeforeContentSeparator` and cleaned up duplicated tests.
+- [x] **Task 5.4: Add test coverage for BundleValidationError Display formatting** (2025-05-21)
+  - [x] Analyze `src/parser.rs` `fmt::Display` for `BundleValidationError`.
+  - [x] Write new unit tests in `src/parser.rs` (tests module) to cover display formatting for:
+    - `ContentBeforeFirstHeader` (lines 79-82, 84)
+    - `MalformedHeaderMissingFilePrefix` (line 92)
+    - `MalformedHeaderPathLineInterruptedBySeparator` (lines 103-106, 108)
+    - [x] `MalformedHeaderPathLineMissingNewline` (lines 111-114, 116)
+    - [x] `MalformedHeaderMissingNewlineAfterContentSeparator` (lines 119-122, 124)
+    - [x] `EmptyPath` (lines 126-127)
+    - [x] `AbsolutePathNotAllowed` (lines 129-130, 132)
+    - [x] `DuplicatePath` (line 135)
+    - [x] `PrematureEOFBeforePathLine` (lines 137-138, 140)
+    - [x] `PrematureEOFBeforeContentSeparator` (lines 142-144, 146)
+    - [x] `PrematureEOFBeforeContentSeparatorNewline` (lines 150-153, 155)
+    - [x] `UnexpectedContentAfterLastEntry` (lines 158-161, 163)
+  - [x] Ensure tests verify the exact string output of these error variants.
