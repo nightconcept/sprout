@@ -152,7 +152,7 @@ impl fmt::Display for BundleValidationError {
             } => write!(
                 f,
                 "L{}: Premature EOF for file \"{}\". Expected newline after content separator.",
-                path, line_number
+                line_number, path
             ),
             BundleValidationError::UnexpectedContentAfterLastEntry {
                 line_number,
@@ -1066,23 +1066,56 @@ mod tests {
         };
         assert_eq!(
             error.to_string(),
-            // Note: The original fmt string in parser.rs has path and line_number swapped in the output.
-            // "L{}: Premature EOF for file \"{}\". Expected newline after content separator."
-            // path, line_number
-            // This test reflects the actual current output.
-            "Lanother/file.txt: Premature EOF for file \"120\". Expected newline after content separator."
+            "L120: Premature EOF for file \"another/file.txt\". Expected newline after content separator."
         );
     }
 
     #[test]
     fn test_display_unexpected_content_after_last_entry() {
         let error = BundleValidationError::UnexpectedContentAfterLastEntry {
-            line_number: 130,
-            content_excerpt: "Trailing unexpected content".to_string(),
+            line_number: 15,
+            content_excerpt: "extra stuff".to_string(),
         };
         assert_eq!(
             error.to_string(),
-            "L130: Unexpected content found after the last valid file entry. Starts with: \"Trailing unexpected content\""
+            "L15: Unexpected content found after the last valid file entry. Starts with: \"extra stuff\""
+        );
+    }
+
+    #[test]
+    fn test_display_malformed_header_missing_file_prefix() {
+        let error = BundleValidationError::MalformedHeaderMissingFilePrefix {
+            line_number: 2,
+            header_line: "Not File:".to_string(),
+        };
+        assert_eq!(
+            error.to_string(),
+            "L2: Malformed file header. Expected 'File: ' after separator line, found: \"Not File:\""
+        );
+    }
+
+    #[test]
+    fn test_display_malformed_header_missing_separator_after_path() {
+        let error = BundleValidationError::MalformedHeaderMissingSeparatorAfterPath {
+            line_number: 3,
+            path_line: "File: path/to/file.txt".to_string(),
+        };
+        assert_eq!(
+            error.to_string(),
+            "L3: Malformed file header. Expected separator line after path line, found: \"File: path/to/file.txt\""
+        );
+    }
+
+    #[test]
+    fn test_display_malformed_header_path_line_interrupted_by_separator() {
+        let error = BundleValidationError::MalformedHeaderPathLineInterruptedBySeparator {
+            line_number: 4,
+            path_line: "File: path/================================================/file.txt"
+                .to_string(),
+        };
+        assert_eq!(
+            error.to_string(),
+            "L4: Malformed file header. File path line is interrupted by a separator: \"File: path/================================================/file.txt\""
         );
     }
 }
