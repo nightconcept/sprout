@@ -151,9 +151,24 @@
         - [x] Test output to current directory (default) and to a specified directory.
     - [x] Verification: The `sprout` command works end-to-end for valid scenarios and fails gracefully with correct, comprehensive error messages for all defined error conditions. Code coverage for core logic (parsing, bundling) is reasonable.
 
+## Bug Fixes
+
+- [x] **Task BUG-1: Fix parser panic on UTF-8 char boundary** (2025-05-22)
+  - Description: The parser panics with "byte index X is not a char boundary" when processing input files containing multi-byte UTF-8 characters near split points.
+  - File: `src/parser.rs`
+  - Line: ~263 (original calculation of `current_bundle_offset`)
+  - Action: Corrected `current_bundle_offset` calculation to be robust against CRLF line endings by using pointer arithmetic to find the true byte offset of the first line to process. This ensures string slicing respects UTF-8 character boundaries.
 ## Additional Tasks / Backlog
+- [x] **Task PARSE-2: Allow trailing whitespace on separator lines** (2025-05-22)
+  - Description: The parser should tolerate optional whitespace characters between the end of a `================================================` separator and the newline character.
+  - File: `src/parser.rs`
+  - Action: Modified parsing logic for both header separators. It now checks the content on the separator line *after* the `FILE_HEADER_SEPARATOR` string. If this trailing content is empty or only whitespace, parsing proceeds. If it contains non-whitespace characters, a new `MalformedHeaderSeparatorWithExtraContent` error is reported. Additionally, the logic for advancing to the next line after a separator now correctly handles both LF and CRLF line endings, preventing premature EOF errors. This makes the parser more robust to common formatting variations.
 
 (Items from the PRD's "Future Considerations" that are out of scope for this initial prototype but good to keep in mind for future development)
+- [x] **Task PARSE-3: Remove dead code `MalformedHeaderMissingNewlineAfterContentSeparator`** (2025-05-22)
+  - Description: After parser enhancements, the `MalformedHeaderMissingNewlineAfterContentSeparator` error variant became unreachable.
+  - File: `src/parser.rs`
+  - Action: Removed the dead error variant and its corresponding `fmt::Display` implementation to resolve clippy warnings.
 
 - [ ] Implement Reverse Operation ("Bundling" a directory into a `digest.txt` style file).
 - [x] **Implement `--force` flag for overwriting files** (2025-05-21) - Add a `--force` CLI flag to allow `sprout` to overwrite existing files in the output directory without prompting.

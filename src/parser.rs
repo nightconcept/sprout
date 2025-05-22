@@ -32,6 +32,10 @@ pub enum BundleValidationError {
         line_number: usize,
         path_line: String,
     },
+    MalformedHeaderSeparatorWithExtraContent {
+        line_number: usize,
+        separator_line_content: String, // The actual content of the separator line
+    },
     MalformedHeaderPathLineInterruptedBySeparator {
         line_number: usize,
         path_line: String,
@@ -39,10 +43,6 @@ pub enum BundleValidationError {
     MalformedHeaderPathLineMissingNewline {
         line_number: usize,
         path_line: String,
-    },
-    MalformedHeaderMissingNewlineAfterContentSeparator {
-        line_number: usize,
-        separator_line: String,
     },
     EmptyPath {
         line_number: usize,
@@ -91,6 +91,18 @@ impl fmt::Display for BundleValidationError {
                 "L{}: Malformed file header. Expected '{}' after separator line, found: \"{}\"",
                 line_number, FILE_PATH_PREFIX, header_line
             ),
+            BundleValidationError::MalformedHeaderSeparatorWithExtraContent {
+                line_number,
+                separator_line_content,
+            } => write!(
+                f,
+                "L{}: Malformed file header. Separator line has unexpected content after '{}': \"{}\"",
+                line_number,
+                FILE_HEADER_SEPARATOR,
+                separator_line_content
+                    .trim_start_matches(FILE_HEADER_SEPARATOR)
+                    .trim()
+            ),
             BundleValidationError::MalformedHeaderMissingSeparatorAfterPath {
                 line_number,
                 path_line,
@@ -114,14 +126,6 @@ impl fmt::Display for BundleValidationError {
                 f,
                 "L{}: Malformed file header. File path line does not end with a newline: \"{}\"",
                 line_number, path_line
-            ),
-            BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
-                line_number,
-                separator_line,
-            } => write!(
-                f,
-                "L{}: Malformed file header. Expected newline after content separator line: \"{}\"",
-                line_number, separator_line
             ),
             BundleValidationError::EmptyPath { line_number } => {
                 write!(f, "L{}: File path is empty.", line_number)
@@ -255,10 +259,20 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
         });
     }
 
-    let mut current_bundle_offset = 0;
-    for line_content_str in lines.iter().take(start_processing_from_line_idx) {
-        current_bundle_offset += line_content_str.len() + 1;
-    }
+    let mut current_bundle_offset = if start_processing_from_line_idx < lines.len() {
+        // Calculate the byte offset of the first line to be processed (the first header line).
+        // `lines[start_processing_from_line_idx]` is the string slice from `bundle_content`
+        // representing this line. Its `.as_ptr()` gives a raw pointer into `bundle_content`.
+        // Subtracting `bundle_content.as_ptr()` gives the byte offset.
+        lines[start_processing_from_line_idx].as_ptr() as usize - bundle_content.as_ptr() as usize
+    } else {
+        // If start_processing_from_line_idx is out of bounds (e.g., empty file, or all lines
+        // are before the first valid header, or no valid header at all),
+        // effectively means no processable content starts at/after this index.
+        // Set offset to bundle_content.len() so the main parsing loop condition
+        // `current_bundle_offset < bundle_content.len()` will be false.
+        bundle_content.len()
+    };
 
     while current_bundle_offset < bundle_content.len() {
         let remaining_content = &bundle_content[current_bundle_offset..];
@@ -288,33 +302,58 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
                 }
 
                 let current_separator_line_num = header_line_number;
+                let first_separator_line_content = bundle_content[header_absolute_start..]
+                    .lines()
+                    .next()
+                    .unwrap_or("");
 
-                let after_first_sep_start = header_absolute_start + FILE_HEADER_SEPARATOR.len();
-                if after_first_sep_start >= bundle_content.len() {
+                let trailing_content_on_first_sep_line =
+                    first_separator_line_content.trim_start_matches(FILE_HEADER_SEPARATOR);
+
+                if !trailing_content_on_first_sep_line.trim().is_empty() {
+                    validation_errors.push(
+                        BundleValidationError::MalformedHeaderSeparatorWithExtraContent {
+                            line_number: current_separator_line_num,
+                            separator_line_content: first_separator_line_content.to_string(),
+                        },
+                    );
+                    // Attempt to find the next valid header to continue parsing if possible,
+                    // or stop if this error is considered fatal for the entry.
+                    // For now, let's assume we try to advance past this malformed line.
+                    current_bundle_offset =
+                        header_absolute_start + first_separator_line_content.len();
+                    if current_bundle_offset < bundle_content.len()
+                        && bundle_content.as_bytes()[current_bundle_offset] == b'\n'
+                    {
+                        current_bundle_offset += 1; // also skip the newline
+                    }
+                    continue;
+                }
+                // If we are here, the first separator line is valid (or only has trailing whitespace)
+
+                let mut next_char_offset_after_sep_text =
+                    header_absolute_start + first_separator_line_content.len();
+
+                // Advance past potential \r
+                if next_char_offset_after_sep_text < bundle_content.len()
+                    && bundle_content.as_bytes()[next_char_offset_after_sep_text] == b'\r'
+                {
+                    next_char_offset_after_sep_text += 1;
+                }
+
+                // Now check for \n
+                if next_char_offset_after_sep_text >= bundle_content.len()
+                    || bundle_content.as_bytes()[next_char_offset_after_sep_text] != b'\n'
+                {
                     validation_errors.push(BundleValidationError::PrematureEOFBeforePathLine {
                         line_number: current_separator_line_num,
                     });
                     current_bundle_offset = bundle_content.len();
                     continue;
                 }
-                if bundle_content.as_bytes()[after_first_sep_start] != b'\n' {
-                    validation_errors.push(
-                        BundleValidationError::MalformedHeaderMissingFilePrefix {
-                            line_number: current_separator_line_num + 1,
-                            header_line: bundle_content[after_first_sep_start..]
-                                .lines()
-                                .next()
-                                .unwrap_or("")
-                                .trim_end()
-                                .to_string(),
-                        },
-                    );
-                    current_bundle_offset = bundle_content.len();
-                    continue;
-                }
-                let path_line_num = current_separator_line_num + 1;
 
-                let path_line_start = after_first_sep_start + 1;
+                let path_line_num = current_separator_line_num + 1;
+                let path_line_start = next_char_offset_after_sep_text + 1; // Start of the actual next line
                 if path_line_start >= bundle_content.len() {
                     validation_errors.push(BundleValidationError::PrematureEOFBeforePathLine {
                         line_number: path_line_num,
@@ -438,8 +477,46 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
                     continue;
                 }
 
-                let after_second_sep_start = second_sep_start + FILE_HEADER_SEPARATOR.len();
-                if after_second_sep_start >= bundle_content.len() {
+                // Validate the second separator line
+                let second_separator_line_content = bundle_content[second_sep_start..]
+                    .lines()
+                    .next()
+                    .unwrap_or("");
+
+                let trailing_content_on_second_sep_line =
+                    second_separator_line_content.trim_start_matches(FILE_HEADER_SEPARATOR);
+
+                if !trailing_content_on_second_sep_line.trim().is_empty() {
+                    validation_errors.push(
+                        BundleValidationError::MalformedHeaderSeparatorWithExtraContent {
+                            line_number: second_sep_line_num,
+                            separator_line_content: second_separator_line_content.to_string(),
+                        },
+                    );
+                    current_bundle_offset = second_sep_start + second_separator_line_content.len();
+                    if current_bundle_offset < bundle_content.len()
+                        && bundle_content.as_bytes()[current_bundle_offset] == b'\n'
+                    {
+                        current_bundle_offset += 1;
+                    }
+                    continue;
+                }
+                // If we are here, the second separator line is valid (or only has trailing whitespace)
+
+                let mut next_char_offset_after_second_sep_text =
+                    second_sep_start + second_separator_line_content.len();
+
+                // Advance past potential \r
+                if next_char_offset_after_second_sep_text < bundle_content.len()
+                    && bundle_content.as_bytes()[next_char_offset_after_second_sep_text] == b'\r'
+                {
+                    next_char_offset_after_second_sep_text += 1;
+                }
+
+                // Now check for \n
+                if next_char_offset_after_second_sep_text >= bundle_content.len()
+                    || bundle_content.as_bytes()[next_char_offset_after_second_sep_text] != b'\n'
+                {
                     validation_errors.push(
                         BundleValidationError::PrematureEOFBeforeContentSeparatorNewline {
                             line_number: second_sep_line_num,
@@ -449,24 +526,8 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
                     current_bundle_offset = bundle_content.len();
                     continue;
                 }
-                if bundle_content.as_bytes()[after_second_sep_start] != b'\n' {
-                    validation_errors.push(
-                        BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
-                            line_number: second_sep_line_num,
-                            separator_line: bundle_content[second_sep_start
-                                ..std::cmp::min(
-                                    bundle_content.len(),
-                                    second_sep_start + FILE_HEADER_SEPARATOR.len(),
-                                )]
-                                .trim_end()
-                                .to_string(),
-                        },
-                    );
-                    current_bundle_offset = bundle_content.len();
-                    continue;
-                }
 
-                let content_actual_start = after_second_sep_start + 1;
+                let content_actual_start = next_char_offset_after_second_sep_text + 1; // Start of the actual content line
 
                 let next_entry_header_search_start = content_actual_start;
                 let content_end_offset = bundle_content[next_entry_header_search_start..]
@@ -742,25 +803,6 @@ mod tests {
     }
 
     #[test]
-    fn test_error_missing_newline_after_content_separator() {
-        let bundle_content = format!(
-            "{}\n\
-            {}file.txt\n\
-            {}{}",
-            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, FILE_HEADER_SEPARATOR, "NoNewlineContent"
-        );
-        let temp_file = create_temp_bundle_file(&bundle_content);
-        let result = parse_bundle(temp_file.path());
-        assert_specific_error(
-            &result,
-            BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
-                line_number: 3,
-                separator_line: FILE_HEADER_SEPARATOR.to_string(),
-            },
-        );
-    }
-
-    #[test]
     fn test_error_empty_path() {
         let bundle_content = format!(
             "{}\n\
@@ -976,21 +1018,6 @@ mod tests {
         assert_eq!(
             error.to_string(),
             "L50: Malformed file header. File path line does not end with a newline: \"path/to/file.txt\""
-        );
-    }
-
-    #[test]
-    fn test_display_malformed_header_missing_newline_after_content_separator() {
-        let error = BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
-            line_number: 60,
-            separator_line: FILE_HEADER_SEPARATOR.to_string(),
-        };
-        assert_eq!(
-            error.to_string(),
-            format!(
-                "L60: Malformed file header. Expected newline after content separator line: \"{}\"",
-                FILE_HEADER_SEPARATOR
-            )
         );
     }
 

@@ -252,7 +252,9 @@ fn test_input_via_i_flag() -> Result<(), Box<dyn std::error::Error>> {
 fn test_missing_input_bundle() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("sprout")?;
     cmd.assert().failure().stderr(
-        predicate::str::contains("Error: Missing bundle file path. Provide it as the first positional argument or use -i/--input.")
+        predicate::str::contains("Usage: sprout.exe") // Expect clap's help message
+            .and(predicate::str::contains("Arguments:"))
+            .and(predicate::str::contains("Options:")),
     );
     Ok(())
 }
@@ -555,8 +557,10 @@ fn test_single_dot_argument_as_bundle_path() -> Result<(), Box<dyn std::error::E
     cmd.assert()
         .failure() // Expect the command to fail
         .stderr(
-            predicate::str::contains("Failed to read bundle file")
-                .and(predicate::str::contains("Is a directory")),
+            predicate::str::contains("Failed to read bundle file").and(
+                predicate::str::contains("Is a directory") // Unix-like
+                    .or(predicate::str::contains("Access is denied.")), // Windows
+            ),
         ); // Check for the specific error
 
     Ok(())

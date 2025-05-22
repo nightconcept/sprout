@@ -2,6 +2,7 @@ Directory structure:
 └── codesprout/
     ├── README.md
     ├── LICENSE
+    ├── default_4120985240160492220_0_37576.profraw
     ├── .pre-commit-config.yaml
     ├── docs/
     │   ├── PRD.md
@@ -10,6 +11,7 @@ Directory structure:
     │   └── TASKS.md
     ├── scripts/
     │   ├── README.md
+    │   ├── install.ps1
     │   └── sign_releases.py
     ├── src/
     │   ├── bundler.rs
@@ -127,6 +129,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+
+
+================================================
+File: default_4120985240160492220_0_37576.profraw
+================================================
+[Non-text file]
 
 
 ================================================
@@ -489,6 +497,10 @@ File: docs/TASKS.md
     - [x] Implement basic stubs for these functions in their respective (future) modules (`parser.rs`, `bundler.rs`).
     - [x] Ensure `main` propagates errors from these calls using `?`.
     - [x] Verification: The `sprout` command runs, prints placeholder messages for each stubbed step based on parsed arguments, and exits gracefully (or with a placeholder error from a stub).
+- [x] **Task 1.4: Display Help on No Arguments** (2025-05-22)
+    - [x] Modified `src/main.rs` to use `clap`'s `arg_required_else_help = true` attribute.
+    - [x] This ensures that `sprout` (with no input arguments) displays the standard `clap` help message instead of a custom error.
+    - [x] Verification: Running `sprout` with no arguments prints the help message.
 
 ## Milestone 2: Bundle File Parsing and Validation
 
@@ -569,9 +581,24 @@ File: docs/TASKS.md
         - [x] Test output to current directory (default) and to a specified directory.
     - [x] Verification: The `sprout` command works end-to-end for valid scenarios and fails gracefully with correct, comprehensive error messages for all defined error conditions. Code coverage for core logic (parsing, bundling) is reasonable.
 
+## Bug Fixes
+
+- [x] **Task BUG-1: Fix parser panic on UTF-8 char boundary** (2025-05-22)
+  - Description: The parser panics with "byte index X is not a char boundary" when processing input files containing multi-byte UTF-8 characters near split points.
+  - File: `src/parser.rs`
+  - Line: ~263 (original calculation of `current_bundle_offset`)
+  - Action: Corrected `current_bundle_offset` calculation to be robust against CRLF line endings by using pointer arithmetic to find the true byte offset of the first line to process. This ensures string slicing respects UTF-8 character boundaries.
 ## Additional Tasks / Backlog
+- [x] **Task PARSE-2: Allow trailing whitespace on separator lines** (2025-05-22)
+  - Description: The parser should tolerate optional whitespace characters between the end of a `================================================` separator and the newline character.
+  - File: `src/parser.rs`
+  - Action: Modified parsing logic for both header separators. It now checks the content on the separator line *after* the `FILE_HEADER_SEPARATOR` string. If this trailing content is empty or only whitespace, parsing proceeds. If it contains non-whitespace characters, a new `MalformedHeaderSeparatorWithExtraContent` error is reported. This makes the parser more robust to common formatting variations.
 
 (Items from the PRD's "Future Considerations" that are out of scope for this initial prototype but good to keep in mind for future development)
+- [x] **Task PARSE-3: Remove dead code `MalformedHeaderMissingNewlineAfterContentSeparator`** (2025-05-22)
+  - Description: After parser enhancements, the `MalformedHeaderMissingNewlineAfterContentSeparator` error variant became unreachable.
+  - File: `src/parser.rs`
+  - Action: Removed the dead error variant and its corresponding `fmt::Display` implementation to resolve clippy warnings.
 
 - [ ] Implement Reverse Operation ("Bundling" a directory into a `digest.txt` style file).
 - [x] **Implement `--force` flag for overwriting files** (2025-05-21) - Add a `--force` CLI flag to allow `sprout` to overwrite existing files in the output directory without prompting.
@@ -587,6 +614,10 @@ File: docs/TASKS.md
 - [ ] Research and implement packaging/distribution methods for the Rust binary (e.g., `cargo-dist`, GitHub Releases assets, AUR, Homebrew).
 - [ ] Performance benchmarking and optimization for very large bundle files or a high number of files.
 - [x] **Task 4.1: Create Project README** (2025-05-20) - Create a cool README.md with emojis, project description, usage, build, and test instructions.
+- [x] **Create PowerShell install script** (2025-05-22) - Create `scripts/install.ps1` to build a release version and copy `sprout.exe` to `$env:USERPROFILE\.local\bin`.
+  - [x] Script builds `sprout` in release mode (`cargo build --release`).
+  - [x] Script copies the built `sprout.exe` to `$env:USERPROFILE\.local\bin`.
+  - [x] Script includes basic error handling and user feedback messages.
 
 - [ ] **Task 3.4: Setup and Document Code Coverage** (2025-05-21)
   - [ ] Choose and document a code coverage tool (e.g., `cargo-tarpaulin`).
@@ -716,6 +747,95 @@ When executed, the script will:
     *   Avoid hardcoding sensitive credentials directly into scripts or committing them to version control. Using environment variables or interactive prompts (as the script does) is preferred.
 *   **API Rate Limits:** While the script processes releases and assets one by one, be mindful of GitHub API rate limits if you are processing a very large number of releases or assets frequently.
 *   **Manual Testing:** It is highly recommended to first test this script on a fork or a test repository with a few sample releases to ensure it behaves as expected with your GPG setup and GitHub token before running it on your main project repository.
+
+
+================================================
+File: scripts/install.ps1
+================================================
+# PowerShell script to build the 'sprout' project in release mode
+# and install it to the user's local bin directory.
+
+# Strict mode
+Set-StrictMode -Version Latest
+
+# Stop on first error
+$ErrorActionPreference = "Stop"
+
+Write-Host "Starting install script for sprout..."
+
+# 1. Define project root (assuming script is run from project root or scripts/ directory)
+$ProjectRoot = $PSScriptRoot | Split-Path
+if ($PSScriptRoot -like "$($ProjectRoot)\scripts") {
+    # Script is in scripts/, so ProjectRoot is one level up
+    # No action needed, $ProjectRoot is correct
+} elseif ($PSScriptRoot -eq $ProjectRoot) {
+    # Script is in project root
+    # No action needed, $ProjectRoot is correct
+} else {
+    Write-Warning "Script is not in the expected 'scripts/' subdirectory or project root. Assuming current directory is project root."
+    $ProjectRoot = Get-Location
+}
+
+Write-Host "Project root identified as: $ProjectRoot"
+
+# 2. Build the project in release mode
+Write-Host "Building 'sprout' in release mode... (cargo build --release)"
+Push-Location $ProjectRoot
+try {
+    cargo build --release
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Cargo build failed with exit code $LASTEXITCODE."
+        exit $LASTEXITCODE
+    }
+    Write-Host "Build successful."
+}
+catch {
+    Write-Error "An error occurred during the build process: $($_.Exception.Message)"
+    exit 1
+}
+finally {
+    Pop-Location
+}
+
+# 3. Define source and destination paths
+$ExecutableName = "sprout.exe" # Assuming Windows, adjust if cross-platform build is intended here
+$SourceFile = Join-Path -Path $ProjectRoot -ChildPath "target\release\$ExecutableName"
+$DestinationDir = Join-Path -Path $env:USERPROFILE -ChildPath ".local\bin"
+
+Write-Host "Source executable: $SourceFile"
+Write-Host "Target directory: $DestinationDir"
+
+# 4. Check if the source file exists
+if (-not (Test-Path $SourceFile -PathType Leaf)) {
+    Write-Error "Build artifact '$SourceFile' not found. Build might have failed or produced a different output."
+    exit 1
+}
+
+# 5. Ensure the destination directory exists
+if (-not (Test-Path $DestinationDir -PathType Container)) {
+    Write-Host "Destination directory '$DestinationDir' does not exist. Creating it..."
+    try {
+        New-Item -ItemType Directory -Force -Path $DestinationDir | Out-Null
+        Write-Host "Destination directory created."
+    }
+    catch {
+        Write-Error "Failed to create destination directory '$DestinationDir': $($_.Exception.Message)"
+        exit 1
+    }
+}
+
+# 6. Copy the executable
+Write-Host "Copying '$ExecutableName' to '$DestinationDir'..."
+try {
+    Copy-Item -Path $SourceFile -Destination $DestinationDir -Force
+    Write-Host "'$ExecutableName' successfully copied to '$DestinationDir'."
+}
+catch {
+    Write-Error "Failed to copy '$ExecutableName' to '$DestinationDir': $($_.Exception.Message)"
+    exit 1
+}
+
+Write-Host "Installation complete. You can now run '$ExecutableName' from your terminal if '$DestinationDir' is in your PATH."
 
 
 ================================================
@@ -1433,7 +1553,7 @@ mod parser;
 
 /// sprout - A CLI tool to sprout files from a bundle.
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None, infer_long_args = true)]
+#[command(author, version, about, long_about = None, infer_long_args = true, arg_required_else_help = true)]
 struct CliArgs {
     /// Positional arguments: <BUNDLE_FILE_PATH> [OUTPUT_DIRECTORY_PATH]
     /// BUNDLE_FILE_PATH is required if -i/--input is not used.
@@ -1574,6 +1694,10 @@ pub enum BundleValidationError {
         line_number: usize,
         path_line: String,
     },
+    MalformedHeaderSeparatorWithExtraContent {
+        line_number: usize,
+        separator_line_content: String, // The actual content of the separator line
+    },
     MalformedHeaderPathLineInterruptedBySeparator {
         line_number: usize,
         path_line: String,
@@ -1581,10 +1705,6 @@ pub enum BundleValidationError {
     MalformedHeaderPathLineMissingNewline {
         line_number: usize,
         path_line: String,
-    },
-    MalformedHeaderMissingNewlineAfterContentSeparator {
-        line_number: usize,
-        separator_line: String,
     },
     EmptyPath {
         line_number: usize,
@@ -1633,6 +1753,18 @@ impl fmt::Display for BundleValidationError {
                 "L{}: Malformed file header. Expected '{}' after separator line, found: \"{}\"",
                 line_number, FILE_PATH_PREFIX, header_line
             ),
+            BundleValidationError::MalformedHeaderSeparatorWithExtraContent {
+                line_number,
+                separator_line_content,
+            } => write!(
+                f,
+                "L{}: Malformed file header. Separator line has unexpected content after '{}': \"{}\"",
+                line_number,
+                FILE_HEADER_SEPARATOR,
+                separator_line_content
+                    .trim_start_matches(FILE_HEADER_SEPARATOR)
+                    .trim()
+            ),
             BundleValidationError::MalformedHeaderMissingSeparatorAfterPath {
                 line_number,
                 path_line,
@@ -1656,14 +1788,6 @@ impl fmt::Display for BundleValidationError {
                 f,
                 "L{}: Malformed file header. File path line does not end with a newline: \"{}\"",
                 line_number, path_line
-            ),
-            BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
-                line_number,
-                separator_line,
-            } => write!(
-                f,
-                "L{}: Malformed file header. Expected newline after content separator line: \"{}\"",
-                line_number, separator_line
             ),
             BundleValidationError::EmptyPath { line_number } => {
                 write!(f, "L{}: File path is empty.", line_number)
@@ -1797,10 +1921,20 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
         });
     }
 
-    let mut current_bundle_offset = 0;
-    for line_content_str in lines.iter().take(start_processing_from_line_idx) {
-        current_bundle_offset += line_content_str.len() + 1;
-    }
+    let mut current_bundle_offset = if start_processing_from_line_idx < lines.len() {
+        // Calculate the byte offset of the first line to be processed (the first header line).
+        // `lines[start_processing_from_line_idx]` is the string slice from `bundle_content`
+        // representing this line. Its `.as_ptr()` gives a raw pointer into `bundle_content`.
+        // Subtracting `bundle_content.as_ptr()` gives the byte offset.
+        lines[start_processing_from_line_idx].as_ptr() as usize - bundle_content.as_ptr() as usize
+    } else {
+        // If start_processing_from_line_idx is out of bounds (e.g., empty file, or all lines
+        // are before the first valid header, or no valid header at all),
+        // effectively means no processable content starts at/after this index.
+        // Set offset to bundle_content.len() so the main parsing loop condition
+        // `current_bundle_offset < bundle_content.len()` will be false.
+        bundle_content.len()
+    };
 
     while current_bundle_offset < bundle_content.len() {
         let remaining_content = &bundle_content[current_bundle_offset..];
@@ -1830,33 +1964,58 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
                 }
 
                 let current_separator_line_num = header_line_number;
+                let first_separator_line_content = bundle_content[header_absolute_start..]
+                    .lines()
+                    .next()
+                    .unwrap_or("");
 
-                let after_first_sep_start = header_absolute_start + FILE_HEADER_SEPARATOR.len();
-                if after_first_sep_start >= bundle_content.len() {
+                let trailing_content_on_first_sep_line =
+                    first_separator_line_content.trim_start_matches(FILE_HEADER_SEPARATOR);
+
+                if !trailing_content_on_first_sep_line.trim().is_empty() {
+                    validation_errors.push(
+                        BundleValidationError::MalformedHeaderSeparatorWithExtraContent {
+                            line_number: current_separator_line_num,
+                            separator_line_content: first_separator_line_content.to_string(),
+                        },
+                    );
+                    // Attempt to find the next valid header to continue parsing if possible,
+                    // or stop if this error is considered fatal for the entry.
+                    // For now, let's assume we try to advance past this malformed line.
+                    current_bundle_offset =
+                        header_absolute_start + first_separator_line_content.len();
+                    if current_bundle_offset < bundle_content.len()
+                        && bundle_content.as_bytes()[current_bundle_offset] == b'\n'
+                    {
+                        current_bundle_offset += 1; // also skip the newline
+                    }
+                    continue;
+                }
+                // If we are here, the first separator line is valid (or only has trailing whitespace)
+
+                let mut next_char_offset_after_sep_text =
+                    header_absolute_start + first_separator_line_content.len();
+
+                // Advance past potential \r
+                if next_char_offset_after_sep_text < bundle_content.len()
+                    && bundle_content.as_bytes()[next_char_offset_after_sep_text] == b'\r'
+                {
+                    next_char_offset_after_sep_text += 1;
+                }
+
+                // Now check for \n
+                if next_char_offset_after_sep_text >= bundle_content.len()
+                    || bundle_content.as_bytes()[next_char_offset_after_sep_text] != b'\n'
+                {
                     validation_errors.push(BundleValidationError::PrematureEOFBeforePathLine {
                         line_number: current_separator_line_num,
                     });
                     current_bundle_offset = bundle_content.len();
                     continue;
                 }
-                if bundle_content.as_bytes()[after_first_sep_start] != b'\n' {
-                    validation_errors.push(
-                        BundleValidationError::MalformedHeaderMissingFilePrefix {
-                            line_number: current_separator_line_num + 1,
-                            header_line: bundle_content[after_first_sep_start..]
-                                .lines()
-                                .next()
-                                .unwrap_or("")
-                                .trim_end()
-                                .to_string(),
-                        },
-                    );
-                    current_bundle_offset = bundle_content.len();
-                    continue;
-                }
-                let path_line_num = current_separator_line_num + 1;
 
-                let path_line_start = after_first_sep_start + 1;
+                let path_line_num = current_separator_line_num + 1;
+                let path_line_start = next_char_offset_after_sep_text + 1; // Start of the actual next line
                 if path_line_start >= bundle_content.len() {
                     validation_errors.push(BundleValidationError::PrematureEOFBeforePathLine {
                         line_number: path_line_num,
@@ -1980,8 +2139,46 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
                     continue;
                 }
 
-                let after_second_sep_start = second_sep_start + FILE_HEADER_SEPARATOR.len();
-                if after_second_sep_start >= bundle_content.len() {
+                // Validate the second separator line
+                let second_separator_line_content = bundle_content[second_sep_start..]
+                    .lines()
+                    .next()
+                    .unwrap_or("");
+
+                let trailing_content_on_second_sep_line =
+                    second_separator_line_content.trim_start_matches(FILE_HEADER_SEPARATOR);
+
+                if !trailing_content_on_second_sep_line.trim().is_empty() {
+                    validation_errors.push(
+                        BundleValidationError::MalformedHeaderSeparatorWithExtraContent {
+                            line_number: second_sep_line_num,
+                            separator_line_content: second_separator_line_content.to_string(),
+                        },
+                    );
+                    current_bundle_offset = second_sep_start + second_separator_line_content.len();
+                    if current_bundle_offset < bundle_content.len()
+                        && bundle_content.as_bytes()[current_bundle_offset] == b'\n'
+                    {
+                        current_bundle_offset += 1;
+                    }
+                    continue;
+                }
+                // If we are here, the second separator line is valid (or only has trailing whitespace)
+
+                let mut next_char_offset_after_second_sep_text =
+                    second_sep_start + second_separator_line_content.len();
+
+                // Advance past potential \r
+                if next_char_offset_after_second_sep_text < bundle_content.len()
+                    && bundle_content.as_bytes()[next_char_offset_after_second_sep_text] == b'\r'
+                {
+                    next_char_offset_after_second_sep_text += 1;
+                }
+
+                // Now check for \n
+                if next_char_offset_after_second_sep_text >= bundle_content.len()
+                    || bundle_content.as_bytes()[next_char_offset_after_second_sep_text] != b'\n'
+                {
                     validation_errors.push(
                         BundleValidationError::PrematureEOFBeforeContentSeparatorNewline {
                             line_number: second_sep_line_num,
@@ -1991,24 +2188,8 @@ pub fn parse_bundle(bundle_path: &Path) -> Result<Vec<ParsedEntry>> {
                     current_bundle_offset = bundle_content.len();
                     continue;
                 }
-                if bundle_content.as_bytes()[after_second_sep_start] != b'\n' {
-                    validation_errors.push(
-                        BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
-                            line_number: second_sep_line_num,
-                            separator_line: bundle_content[second_sep_start
-                                ..std::cmp::min(
-                                    bundle_content.len(),
-                                    second_sep_start + FILE_HEADER_SEPARATOR.len(),
-                                )]
-                                .trim_end()
-                                .to_string(),
-                        },
-                    );
-                    current_bundle_offset = bundle_content.len();
-                    continue;
-                }
 
-                let content_actual_start = after_second_sep_start + 1;
+                let content_actual_start = next_char_offset_after_second_sep_text + 1; // Start of the actual content line
 
                 let next_entry_header_search_start = content_actual_start;
                 let content_end_offset = bundle_content[next_entry_header_search_start..]
@@ -2284,25 +2465,6 @@ mod tests {
     }
 
     #[test]
-    fn test_error_missing_newline_after_content_separator() {
-        let bundle_content = format!(
-            "{}\n\
-            {}file.txt\n\
-            {}{}",
-            FILE_HEADER_SEPARATOR, FILE_PATH_PREFIX, FILE_HEADER_SEPARATOR, "NoNewlineContent"
-        );
-        let temp_file = create_temp_bundle_file(&bundle_content);
-        let result = parse_bundle(temp_file.path());
-        assert_specific_error(
-            &result,
-            BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
-                line_number: 3,
-                separator_line: FILE_HEADER_SEPARATOR.to_string(),
-            },
-        );
-    }
-
-    #[test]
     fn test_error_empty_path() {
         let bundle_content = format!(
             "{}\n\
@@ -2518,21 +2680,6 @@ mod tests {
         assert_eq!(
             error.to_string(),
             "L50: Malformed file header. File path line does not end with a newline: \"path/to/file.txt\""
-        );
-    }
-
-    #[test]
-    fn test_display_malformed_header_missing_newline_after_content_separator() {
-        let error = BundleValidationError::MalformedHeaderMissingNewlineAfterContentSeparator {
-            line_number: 60,
-            separator_line: FILE_HEADER_SEPARATOR.to_string(),
-        };
-        assert_eq!(
-            error.to_string(),
-            format!(
-                "L60: Malformed file header. Expected newline after content separator line: \"{}\"",
-                FILE_HEADER_SEPARATOR
-            )
         );
     }
 
@@ -2922,7 +3069,9 @@ fn test_input_via_i_flag() -> Result<(), Box<dyn std::error::Error>> {
 fn test_missing_input_bundle() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("sprout")?;
     cmd.assert().failure().stderr(
-        predicate::str::contains("Error: Missing bundle file path. Provide it as the first positional argument or use -i/--input.")
+        predicate::str::contains("Usage: sprout.exe") // Expect clap's help message
+            .and(predicate::str::contains("Arguments:"))
+            .and(predicate::str::contains("Options:")),
     );
     Ok(())
 }
@@ -3225,8 +3374,10 @@ fn test_single_dot_argument_as_bundle_path() -> Result<(), Box<dyn std::error::E
     cmd.assert()
         .failure() // Expect the command to fail
         .stderr(
-            predicate::str::contains("Failed to read bundle file")
-                .and(predicate::str::contains("Is a directory")),
+            predicate::str::contains("Failed to read bundle file").and(
+                predicate::str::contains("Is a directory") // Unix-like
+                    .or(predicate::str::contains("Access is denied.")), // Windows
+            ),
         ); // Check for the specific error
 
     Ok(())
